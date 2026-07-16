@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: white;
+  background-color: black;
   font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
@@ -16,7 +16,7 @@ body {
 h1 {
   font-size: 4rem;
   margin-bottom: 40px;
-  color: black;
+  color: white;
 }
 
 .keyboard {
@@ -29,9 +29,10 @@ h1 {
 
 .key {
   display: inline-block;
-  border: 2px solid black;
+  border: 2px solid white;
   padding: 10px 15px;
   margin: 2px;
   border-radius: 4px;
   font-size: 1rem;
+  color: white;
 }
