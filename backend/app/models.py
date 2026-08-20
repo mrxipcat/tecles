@@ -165,3 +165,15 @@ class Reservation(Base):
     def session_title(self) -> str:
         show_room = self.session.entity.is_multiroom and self.user.assigned_room_id is None
         return compose_display_title(self.session.title, self.session.room_name, show_room)
+
+    @property
+    def session_date(self) -> date_:
+        return self.session.date
+
+    @property
+    def session_start_time(self) -> time_:
+        return self.session.start_time
+
+    @property
+    def session_end_time(self) -> time_:
+        return self.session.end_time

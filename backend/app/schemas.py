@@ -220,6 +220,9 @@ class ReservationRead(BaseModel):
     created_at: datetime
     confirmed_at: datetime | None = None
     session_title: str
+    session_date: date_
+    session_start_time: time_
+    session_end_time: time_
 
 
 class ReservationAdminRead(ReservationRead):

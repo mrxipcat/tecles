@@ -486,6 +486,15 @@ form label {
   margin-bottom: 0.75rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row label {
+  flex: 1;
+}
+
 .admin-form {
   background: white;
   border: 1px solid #e2e2e2;

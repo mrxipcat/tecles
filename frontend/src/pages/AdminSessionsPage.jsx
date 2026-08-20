@@ -22,6 +22,7 @@ export default function AdminSessionsPage() {
   const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [error, setError] = useState(null);
 
   const singular = entity?.slot_label_singular ?? "Sessió";
   const plural = entity?.slot_label_plural ?? "Sessions";
@@ -54,10 +55,12 @@ export default function AdminSessionsPage() {
   }
 
   function handleNew() {
+    setError(null);
     setForm(EMPTY_FORM);
   }
 
   function handleEdit(session) {
+    setError(null);
     setForm({
       id: session.id,
       title: session.title || "",
@@ -72,6 +75,13 @@ export default function AdminSessionsPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setError(null);
+
+    if (form.end_time <= form.start_time) {
+      setError("L'hora de finalització ha de ser posterior a l'hora d'inici.");
+      return;
+    }
+
     const payload = {
       title: form.title || null,
       description: form.description,
@@ -83,13 +93,17 @@ export default function AdminSessionsPage() {
     if (isMultiroom) {
       payload.room_id = Number(form.room_id);
     }
-    if (form.id) {
-      await client.patch(`/sessions/${form.id}`, payload);
-    } else {
-      await client.post("/sessions", { ...payload, entity_id: user.entity_id });
+    try {
+      if (form.id) {
+        await client.patch(`/sessions/${form.id}`, payload);
+      } else {
+        await client.post("/sessions", { ...payload, entity_id: user.entity_id });
+      }
+      setForm(null);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || `No s'ha pogut desar ${singular.toLowerCase()}.`);
     }
-    setForm(null);
-    load();
   }
 
   async function handleDelete(sessionId) {
@@ -141,24 +155,27 @@ export default function AdminSessionsPage() {
             Data
             <input type="date" value={form.date} onChange={(e) => handleChange("date", e.target.value)} required />
           </label>
-          <label>
-            Hora d'inici
-            <input
-              type="time"
-              value={form.start_time}
-              onChange={(e) => handleChange("start_time", e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Hora de final
-            <input
-              type="time"
-              value={form.end_time}
-              onChange={(e) => handleChange("end_time", e.target.value)}
-              required
-            />
-          </label>
+          <div className="form-row">
+            <label>
+              Hora d'inici
+              <input
+                type="time"
+                value={form.start_time}
+                onChange={(e) => handleChange("start_time", e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Hora de final
+              <input
+                type="time"
+                value={form.end_time}
+                onChange={(e) => handleChange("end_time", e.target.value)}
+                required
+              />
+            </label>
+          </div>
+          {error && <p className="error">{error}</p>}
           <label>
             Places
             <input

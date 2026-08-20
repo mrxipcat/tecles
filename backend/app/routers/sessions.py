@@ -136,6 +136,9 @@ def create_session(
     if admin.entity_id != payload.entity_id:
         raise HTTPException(status_code=403, detail="No pots crear sessions per a una altra entitat")
 
+    if payload.end_time <= payload.start_time:
+        raise HTTPException(status_code=400, detail="L'hora de finalització ha de ser posterior a l'hora d'inici")
+
     if admin.entity.is_multiroom:
         if payload.room_id is None:
             raise HTTPException(
@@ -172,6 +175,12 @@ def update_session(
         raise HTTPException(status_code=403, detail="No pots modificar sessions d'una altra entitat")
 
     fields = payload.model_dump(exclude_unset=True)
+
+    effective_start = fields.get("start_time", session.start_time)
+    effective_end = fields.get("end_time", session.end_time)
+    if effective_end <= effective_start:
+        raise HTTPException(status_code=400, detail="L'hora de finalització ha de ser posterior a l'hora d'inici")
+
     room_id = fields.pop("room_id", None)
     if room_id is not None:
         if not admin.entity.is_multiroom:
