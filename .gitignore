@@ -6,6 +6,12 @@ backend/.venv/
 backend/webaules.db
 *.db
 
+# Azure Functions (local dev artifacts)
+backend/local.settings.json
+backend/.python_packages/
+backend/bin/
+backend/obj/
+
 # Node / frontend
 frontend/node_modules/
 frontend/dist/

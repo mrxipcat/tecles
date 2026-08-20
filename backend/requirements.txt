@@ -4,3 +4,12 @@ sqlalchemy>=2.0
 pydantic>=2.0
 pydantic-settings>=2.0
 python-dotenv>=1.0
+
+# Desplegament a Azure Functions (Managed Functions d'Azure Static Web Apps)
+azure-functions>=1.21
+
+# Connexió a Azure SQL Database en producció (driver TDS pur Python, sense
+# dependència del driver ODBC del sistema; en local es continua fent servir
+# SQLite via DATABASE_URL, vegeu app/config.py).
+python-tds>=1.15
+sqlalchemy-pytds>=1.0

@@ -199,3 +199,44 @@ backend a `http://localhost:8000` (configurat a `vite.config.js`).
 Els nous comptes ja no s'autoregistren: un administrador els pot crear des de "Admin:
 Usuaris" (per a la seva pròpia entitat) i un superadministrador des de "Superadmin: Entitats"
 (comptes admin de qualsevol entitat).
+
+## Desplegament a Azure (tecles.com)
+
+Aquest repositori té vinculat un recurs d'Azure Static Web Apps existent (domini `tecles.com`),
+amb el flux d'Azure Functions "Managed" que preveia l'arquitectura final: el frontend es
+serveix com a contingut estàtic i el backend FastAPI es desplega com una Azure Function
+única que embolcalla tota l'app amb el pont ASGI (`backend/function_app.py`), sense haver de
+reescriure cap endpoint.
+
+### Automatitzat (GitHub Actions)
+
+Cada `push` a `main` dispara `.github/workflows/azure-static-web-apps-mango-dune-043afed03.yml`,
+que:
+- Construeix `frontend/` (Vite) com a `app_location` i en desplega `frontend/dist` com a
+  `output_location`.
+- Construeix `backend/` com a `api_location` (Managed Functions, runtime `python:3.11` fixat a
+  `frontend/staticwebapp.config.json`) i el desplega a la mateixa Static Web App.
+- No cal cap recurs d'Azure nou per a això — reutilitza el que ja existia i que servia la
+  landing page anterior.
+
+`backend/host.json` fixa `routePrefix` a buit perquè Azure Functions no afegeixi el seu propi
+prefix "api/" per sobre del que ja declaren els routers de FastAPI (`prefix="/api"`); així les
+crides `/api/...` funcionen igual en local, en Managed Functions directament i a través de
+Static Web Apps.
+
+### Pendent de fer manualment (Portal d'Azure — no ho puc fer des d'aquí)
+
+1. **Base de dades**: crear un **Azure SQL Database (nivell Free)**. SQLite només és vàlid en
+   local — el sistema de fitxers de Managed Functions no és persistent entre execucions.
+2. Construir la cadena de connexió amb el dialecte pur Python (sense driver ODBC):
+   `mssql+pytds://<usuari>:<contrasenya>@<servidor>.database.windows.net:1433/<base_de_dades>`
+3. Definir-la com a variable d'entorn **`DATABASE_URL`** a la configuració ("Environment
+   variables"/"Configuration") de la Static Web App al Portal d'Azure — s'aplica a la Function
+   vinculada.
+4. Confirmar que el domini personalitzat `tecles.com` segueix vinculat al mateix recurs (no
+   l'hem tocat, només el contingut que hi desplega GitHub Actions).
+5. Al primer desplegament amb la base de dades nova, l'aplicació crea les taules i les dades
+   de llavor (seed) automàticament, igual que en local.
+
+No hi ha cap eina `az`/Azure CLI disponible en aquest entorn de desenvolupament, així que
+aquests passos només es poden fer des del Portal d'Azure directament.

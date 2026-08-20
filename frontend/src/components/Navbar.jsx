@@ -8,7 +8,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand">WebAules</div>
+      <div className="navbar-brand">Tecles</div>
       <div className="navbar-links">
         {isAuthenticated && isSuperadmin && <Link to="/superadmin/entitats">Superadmin: Entitats</Link>}
         {isAuthenticated && !isSuperadmin && (
