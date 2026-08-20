@@ -9,11 +9,20 @@ const buildDate = new Date(__BUILD_DATE__).toLocaleString("ca-ES", {
   timeStyle: "short",
 });
 
+function entityCodeFromSubdomain() {
+  const parts = window.location.hostname.split(".");
+  if (parts.length < 3) return null;
+  const subdomain = parts[0];
+  if (subdomain === "www") return null;
+  return subdomain;
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const fixedEntityCode = entityCodeFromSubdomain();
   const [username, setUsername] = useState("usuari");
-  const [entityCode, setEntityCode] = useState("demo");
+  const [entityCode, setEntityCode] = useState(fixedEntityCode || "demo");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
@@ -32,10 +41,12 @@ export default function LoginPage() {
     <div className="login-page">
       <h1>Entrar</h1>
       <form onSubmit={handleSubmit}>
-        <label>
-          Codi d'entitat
-          <input value={entityCode} onChange={(e) => setEntityCode(e.target.value)} />
-        </label>
+        {!fixedEntityCode && (
+          <label>
+            Codi d'entitat
+            <input value={entityCode} onChange={(e) => setEntityCode(e.target.value)} />
+          </label>
+        )}
         <label>
           Nom d'usuari
           <input value={username} onChange={(e) => setUsername(e.target.value)} required />
