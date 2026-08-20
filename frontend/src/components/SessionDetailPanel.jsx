@@ -1,4 +1,6 @@
 import { useAuth } from "../context/AuthContext.jsx";
+import Button from "./Button.jsx";
+import { CalendarPlusIcon, CalendarXIcon, XIcon } from "./icons.jsx";
 import { availabilityClass, availabilityText } from "../utils/availability.js";
 
 export default function SessionDetailPanel({ session, onReserve, onCancel, onClose }) {
@@ -25,9 +27,9 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
     <div className={`session-detail-panel ${availabilityClass(session)}`}>
       <div className="session-detail-header">
         <h2>{session.display_title}</h2>
-        <button type="button" className="link-button" onClick={onClose}>
+        <Button icon={XIcon} onClick={onClose}>
           Tanca
-        </button>
+        </Button>
       </div>
       <p className="session-card-date">
         {session.date} · {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
@@ -44,15 +46,15 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
         <span>{availabilityText(session)}</span>
         {session.my_reservation_id ? (
           onCancel && (
-            <button type="button" className="danger-button" onClick={handleCancelClick}>
+            <Button icon={CalendarXIcon} variant="danger" onClick={handleCancelClick}>
               Cancel·la la reserva
-            </button>
+            </Button>
           )
         ) : (
           onReserve && (
-            <button disabled={full} onClick={() => onReserve(session)}>
+            <Button icon={CalendarPlusIcon} variant="primary" disabled={full} onClick={() => onReserve(session)}>
               {full ? "Completa" : "Reservar"}
-            </button>
+            </Button>
           )
         )}
       </div>

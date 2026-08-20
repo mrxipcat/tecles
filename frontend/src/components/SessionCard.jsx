@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+import Button from "./Button.jsx";
+import { CalendarPlusIcon, CalendarXIcon, ChevronDownIcon } from "./icons.jsx";
 import { availabilityClass, availabilityText } from "../utils/availability.js";
 
 export default function SessionCard({ session, onReserve, onCancel }) {
@@ -24,15 +26,14 @@ export default function SessionCard({ session, onReserve, onCancel }) {
           </span>
         </div>
         {session.description && (
-          <button
-            type="button"
-            className={`chevron-button ${expanded ? "is-expanded" : ""}`}
+          <Button
+            icon={ChevronDownIcon}
+            iconOnly
+            expanded={expanded}
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? "Amaga la descripció" : "Mostra la descripció"}
             aria-expanded={expanded}
-          >
-            ⌄
-          </button>
+          />
         )}
       </div>
       {expanded && session.description && <p className="session-card-description">{session.description}</p>}
@@ -47,15 +48,15 @@ export default function SessionCard({ session, onReserve, onCancel }) {
         <span>{availabilityText(session)}</span>
         {session.my_reservation_id ? (
           onCancel && (
-            <button type="button" className="danger-button" onClick={handleCancelClick}>
+            <Button icon={CalendarXIcon} variant="danger" onClick={handleCancelClick}>
               Cancel·la la reserva
-            </button>
+            </Button>
           )
         ) : (
           onReserve && (
-            <button disabled={full} onClick={() => onReserve(session)}>
+            <Button icon={CalendarPlusIcon} variant="primary" disabled={full} onClick={() => onReserve(session)}>
               {full ? "Completa" : "Reservar"}
-            </button>
+            </Button>
           )
         )}
       </div>

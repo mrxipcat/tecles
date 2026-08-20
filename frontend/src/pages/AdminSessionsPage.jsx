@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { ChevronDownIcon, PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
 import SessionReservationsPanel from "../components/SessionReservationsPanel.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -102,7 +104,11 @@ export default function AdminSessionsPage() {
     <div className="page">
       <div className="page-header">
         <h1>Administració de {plural}</h1>
-        {!form && <button onClick={handleNew}>Nova {singular}</button>}
+        {!form && (
+          <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
+            Nova {singular}
+          </Button>
+        )}
       </div>
 
       {form && (
@@ -164,10 +170,12 @@ export default function AdminSessionsPage() {
             />
           </label>
           <div className="admin-form-actions">
-            <button type="submit">{form.id ? "Desar canvis" : "Crear"}</button>
-            <button type="button" onClick={() => setForm(null)}>
+            <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
+              {form.id ? "Desar canvis" : "Crear"}
+            </Button>
+            <Button icon={XIcon} onClick={() => setForm(null)}>
               Tancar
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -199,11 +207,21 @@ export default function AdminSessionsPage() {
                 {showPending && <td>{session.pending_count ?? 0}</td>}
                 <td>{session.confirmed_count ?? 0}</td>
                 <td>
-                  <button onClick={() => handleEdit(session)}>Editar</button>
-                  <button onClick={() => handleDelete(session.id)}>Esborrar</button>
-                  <button onClick={() => toggleReservations(session.id)}>
-                    {expandedId === session.id ? "Amagar reserves" : "Veure reserves"}
-                  </button>
+                  <div className="table-actions">
+                    <Button icon={PencilIcon} onClick={() => handleEdit(session)}>
+                      Editar
+                    </Button>
+                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(session.id)}>
+                      Esborrar
+                    </Button>
+                    <Button
+                      icon={ChevronDownIcon}
+                      expanded={expandedId === session.id}
+                      onClick={() => toggleReservations(session.id)}
+                    >
+                      {expandedId === session.id ? "Amagar reserves" : "Veure reserves"}
+                    </Button>
+                  </div>
                 </td>
               </tr>
               {expandedId === session.id && entity && (

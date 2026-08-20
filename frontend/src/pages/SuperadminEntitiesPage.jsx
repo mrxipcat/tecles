@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { ChevronDownIcon, PlusIcon, TrashIcon, XIcon } from "../components/icons.jsx";
 import SuperadminEntityAdminsPanel from "../components/SuperadminEntityAdminsPanel.jsx";
 
 const EMPTY_FORM = { name: "", code: "", slot_label_singular: "Sessió", slot_label_plural: "Sessions" };
@@ -59,7 +61,11 @@ export default function SuperadminEntitiesPage() {
     <div className="page">
       <div className="page-header">
         <h1>Administració d'entitats</h1>
-        {!form && <button onClick={handleNew}>Nova entitat</button>}
+        {!form && (
+          <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
+            Nova entitat
+          </Button>
+        )}
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -92,10 +98,12 @@ export default function SuperadminEntitiesPage() {
             />
           </label>
           <div className="admin-form-actions">
-            <button type="submit">Crear</button>
-            <button type="button" onClick={() => setForm(null)}>
+            <Button type="submit" icon={PlusIcon} variant="primary">
+              Crear
+            </Button>
+            <Button icon={XIcon} onClick={() => setForm(null)}>
               Tancar
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -119,10 +127,18 @@ export default function SuperadminEntitiesPage() {
                 <td>{e.slot_label_singular}</td>
                 <td>{e.slot_label_plural}</td>
                 <td>
-                  <button onClick={() => toggleAdmins(e.id)}>
-                    {expandedId === e.id ? "Amagar admins" : "Gestionar admins"}
-                  </button>
-                  <button onClick={() => handleDelete(e.id)}>Esborrar</button>
+                  <div className="table-actions">
+                    <Button
+                      icon={ChevronDownIcon}
+                      expanded={expandedId === e.id}
+                      onClick={() => toggleAdmins(e.id)}
+                    >
+                      {expandedId === e.id ? "Amagar admins" : "Gestionar admins"}
+                    </Button>
+                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(e.id)}>
+                      Esborrar
+                    </Button>
+                  </div>
                 </td>
               </tr>
               {expandedId === e.id && (

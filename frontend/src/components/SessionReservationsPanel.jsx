@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "./Button.jsx";
+import { CheckIcon, XIcon } from "./icons.jsx";
 
 export default function SessionReservationsPanel({ sessionId, autoConfirm }) {
   const [reservations, setReservations] = useState([]);
@@ -42,8 +44,14 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm }) {
                     <td>{r.user.full_name || r.user.username}</td>
                     <td>{new Date(r.created_at).toLocaleString()}</td>
                     <td>
-                      <button onClick={() => decide(r.id, "confirmed")}>Confirmar</button>
-                      <button onClick={() => decide(r.id, "rejected")}>Rebutjar</button>
+                      <div className="table-actions">
+                        <Button icon={CheckIcon} variant="primary" onClick={() => decide(r.id, "confirmed")}>
+                          Confirmar
+                        </Button>
+                        <Button icon={XIcon} variant="danger" onClick={() => decide(r.id, "rejected")}>
+                          Rebutjar
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

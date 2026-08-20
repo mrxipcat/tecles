@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const EMPTY_FORM = { id: null, name: "" };
@@ -73,7 +75,11 @@ export default function AdminRoomsPage() {
     <div className="page">
       <div className="page-header">
         <h1>Administració de {roomPluralLower}</h1>
-        {!form && <button onClick={handleNew}>Nova {roomSingularLower}</button>}
+        {!form && (
+          <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
+            Nova {roomSingularLower}
+          </Button>
+        )}
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -86,10 +92,12 @@ export default function AdminRoomsPage() {
             <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} required />
           </label>
           <div className="admin-form-actions">
-            <button type="submit">{form.id ? "Desar canvis" : "Crear"}</button>
-            <button type="button" onClick={() => setForm(null)}>
+            <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
+              {form.id ? "Desar canvis" : "Crear"}
+            </Button>
+            <Button icon={XIcon} onClick={() => setForm(null)}>
               Tancar
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -106,8 +114,14 @@ export default function AdminRoomsPage() {
             <tr key={room.id}>
               <td>{room.name}</td>
               <td>
-                <button onClick={() => handleEdit(room)}>Editar</button>
-                <button onClick={() => handleDelete(room.id)}>Esborrar</button>
+                <div className="table-actions">
+                  <Button icon={PencilIcon} onClick={() => handleEdit(room)}>
+                    Editar
+                  </Button>
+                  <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(room.id)}>
+                    Esborrar
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

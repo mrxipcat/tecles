@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { CheckIcon, KeyIcon, PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const EMPTY_FORM = {
@@ -120,7 +122,11 @@ export default function AdminUsersPage() {
     <div className="page">
       <div className="page-header">
         <h1>Administració d'usuaris</h1>
-        {!form && <button onClick={handleNew}>Nou usuari</button>}
+        {!form && (
+          <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
+            Nou usuari
+          </Button>
+        )}
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -177,10 +183,12 @@ export default function AdminUsersPage() {
           )}
           {!form.id && <p className="info">L'usuari haurà de canviar-la en el primer inici de sessió.</p>}
           <div className="admin-form-actions">
-            <button type="submit">{form.id ? "Desar canvis" : "Crear"}</button>
-            <button type="button" onClick={() => setForm(null)}>
+            <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
+              {form.id ? "Desar canvis" : "Crear"}
+            </Button>
+            <Button icon={XIcon} onClick={() => setForm(null)}>
               Tancar
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -206,9 +214,17 @@ export default function AdminUsersPage() {
                 {isMultiroom && <td>{u.role === "user" ? u.assigned_room_name || "Totes" : "—"}</td>}
                 <td>{u.must_change_password ? "Sí" : "No"}</td>
                 <td>
-                  <button onClick={() => handleEdit(u)}>Editar</button>
-                  <button onClick={() => handleResetToggle(u.id)}>Reiniciar contrasenya</button>
-                  <button onClick={() => handleDelete(u.id)}>Esborrar</button>
+                  <div className="table-actions">
+                    <Button icon={PencilIcon} onClick={() => handleEdit(u)}>
+                      Editar
+                    </Button>
+                    <Button icon={KeyIcon} onClick={() => handleResetToggle(u.id)}>
+                      Reiniciar contrasenya
+                    </Button>
+                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(u.id)}>
+                      Esborrar
+                    </Button>
+                  </div>
                 </td>
               </tr>
               {resetId === u.id && (
@@ -224,10 +240,12 @@ export default function AdminUsersPage() {
                           required
                         />
                       </label>
-                      <button type="submit">Confirmar</button>
-                      <button type="button" onClick={() => setResetId(null)}>
+                      <Button type="submit" icon={CheckIcon} variant="primary">
+                        Confirmar
+                      </Button>
+                      <Button icon={XIcon} onClick={() => setResetId(null)}>
                         Cancel·lar
-                      </button>
+                      </Button>
                     </form>
                   </td>
                 </tr>

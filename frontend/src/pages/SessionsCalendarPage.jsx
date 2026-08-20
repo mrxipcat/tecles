@@ -5,10 +5,12 @@ import CalendarGrid from "../components/CalendarGrid.jsx";
 import WeekTimelineGrid from "../components/WeekTimelineGrid.jsx";
 import SessionDetailPanel from "../components/SessionDetailPanel.jsx";
 import RoomFilterBar from "../components/RoomFilterBar.jsx";
+import Button from "../components/Button.jsx";
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, ColumnsIcon } from "../components/icons.jsx";
 import { buildMonthDays, buildWeekDays, formatRangeLabel } from "../utils/calendarGrid.js";
 
 export default function SessionsCalendarPage() {
-  const { user, entity } = useAuth();
+  const { user, entity, isAdmin } = useAuth();
   const { sessions, rooms, activeRoomIds, toggleRoom, message, reserve, cancel } = useSessions(user.entity_id);
   const [granularity, setGranularity] = useState("month");
   const [referenceDate, setReferenceDate] = useState(() => new Date());
@@ -46,32 +48,32 @@ export default function SessionsCalendarPage() {
       {message && <p className="info">{message}</p>}
       <div className="calendar-toolbar">
         <div className="calendar-nav">
-          <button type="button" onClick={() => shift(-1)}>
-            ‹ Anterior
-          </button>
-          <button type="button" onClick={() => setReferenceDate(new Date())}>
+          <Button icon={ChevronLeftIcon} onClick={() => shift(-1)}>
+            Anterior
+          </Button>
+          <Button icon={CalendarIcon} onClick={() => setReferenceDate(new Date())}>
             Avui
-          </button>
-          <button type="button" onClick={() => shift(1)}>
-            Següent ›
-          </button>
+          </Button>
+          <Button icon={ChevronRightIcon} onClick={() => shift(1)}>
+            Següent
+          </Button>
         </div>
         <span className="calendar-range-label">{formatRangeLabel(referenceDate, granularity)}</span>
         <div className="calendar-granularity">
-          <button
-            type="button"
+          <Button
+            icon={ColumnsIcon}
             className={granularity === "week" ? "active" : ""}
             onClick={() => setGranularity("week")}
           >
             Setmana
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            icon={CalendarIcon}
             className={granularity === "month" ? "active" : ""}
             onClick={() => setGranularity("month")}
           >
             Mes
-          </button>
+          </Button>
         </div>
       </div>
       {granularity === "week" ? (
@@ -92,8 +94,8 @@ export default function SessionsCalendarPage() {
       )}
       <SessionDetailPanel
         session={selectedSession}
-        onReserve={reserve}
-        onCancel={cancel}
+        onReserve={isAdmin ? undefined : reserve}
+        onCancel={isAdmin ? undefined : cancel}
         onClose={() => setSelectedId(null)}
       />
     </div>

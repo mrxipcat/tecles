@@ -5,6 +5,8 @@ export function availabilityClass(session) {
 }
 
 export function availabilityText(session) {
+  if (session.my_reservation_status === "confirmed") return "Reserva Confirmada";
+  if (session.my_reservation_status === "pending") return "Reserva Sol·licitada";
   if (session.available_places == null) return `Capacitat: ${session.capacity}`;
   if (session.capacity === 1) return session.available_places === 1 ? "Disponible" : "No disponible";
   return `Places lliures: ${session.available_places} / ${session.capacity}`;

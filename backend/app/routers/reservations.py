@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date as date_, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session as DbSession
@@ -9,6 +9,49 @@ from app.models import Reservation, ReservationStatus, SlotSession, User, UserRo
 from app.schemas import ReservationAdminRead, ReservationCreate, ReservationDecision, ReservationRead
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
+
+ACTIVE_STATUSES = (ReservationStatus.PENDING, ReservationStatus.CONFIRMED)
+
+
+def _count_active_reservations_in_range(user_id: int, start: date_, end: date_, db: DbSession) -> int:
+    return (
+        db.query(Reservation)
+        .join(SlotSession, Reservation.session_id == SlotSession.id)
+        .filter(
+            Reservation.user_id == user_id,
+            Reservation.status.in_(ACTIVE_STATUSES),
+            SlotSession.date >= start,
+            SlotSession.date <= end,
+        )
+        .count()
+    )
+
+
+def _check_reservation_limits(user: User, session: SlotSession, db: DbSession) -> None:
+    entity = session.entity
+    day = session.date
+
+    if entity.max_reservations_per_day is not None:
+        count = _count_active_reservations_in_range(user.id, day, day, db)
+        if count >= entity.max_reservations_per_day:
+            raise HTTPException(status_code=400, detail="Has arribat al límit de reserves per dia d'aquesta entitat")
+
+    if entity.max_reservations_per_week is not None:
+        week_start = day - timedelta(days=day.weekday())
+        week_end = week_start + timedelta(days=6)
+        count = _count_active_reservations_in_range(user.id, week_start, week_end, db)
+        if count >= entity.max_reservations_per_week:
+            raise HTTPException(status_code=400, detail="Has arribat al límit de reserves per setmana d'aquesta entitat")
+
+    if entity.max_reservations_per_month is not None:
+        month_start = day.replace(day=1)
+        next_month_start = (
+            date_(day.year + 1, 1, 1) if day.month == 12 else date_(day.year, day.month + 1, 1)
+        )
+        month_end = next_month_start - timedelta(days=1)
+        count = _count_active_reservations_in_range(user.id, month_start, month_end, db)
+        if count >= entity.max_reservations_per_month:
+            raise HTTPException(status_code=400, detail="Has arribat al límit de reserves per mes d'aquesta entitat")
 
 
 @router.get("", response_model=list[ReservationAdminRead])
@@ -55,7 +98,7 @@ def create_reservation(
         db.query(Reservation)
         .filter(
             Reservation.session_id == session.id,
-            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]),
+            Reservation.status.in_(ACTIVE_STATUSES),
         )
         .count()
     )
@@ -67,7 +110,7 @@ def create_reservation(
         .join(SlotSession, Reservation.session_id == SlotSession.id)
         .filter(
             Reservation.user_id == current_user.id,
-            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]),
+            Reservation.status.in_(ACTIVE_STATUSES),
             SlotSession.date == session.date,
             SlotSession.start_time < session.end_time,
             SlotSession.end_time > session.start_time,
@@ -80,7 +123,7 @@ def create_reservation(
             detail="Ja tens una reserva que coincideix, totalment o parcialment, amb aquest horari",
         )
 
-    # TODO(sprint6): aplicar límits max_reservations_per_day/week/month de l'entitat.
+    _check_reservation_limits(current_user, session, db)
 
     auto_confirm = session.entity.auto_confirm_reservations
     reservation = Reservation(

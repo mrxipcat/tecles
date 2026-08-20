@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { CalendarXIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const STATUS_LABELS = {
@@ -27,8 +29,12 @@ export default function MyReservationsPage() {
     if (!window.confirm(`Vols cancel·lar la reserva de "${reservation.session_title}"?`)) {
       return;
     }
-    await client.delete(`/reservations/${reservation.id}`);
-    load();
+    try {
+      await client.delete(`/reservations/${reservation.id}`);
+      load();
+    } catch (err) {
+      window.alert(err.response?.data?.detail || "No s'ha pogut cancel·lar la reserva.");
+    }
   }
 
   return (
@@ -58,9 +64,9 @@ export default function MyReservationsPage() {
               <td>{reservation.confirmed_at ? new Date(reservation.confirmed_at).toLocaleString() : ""}</td>
               <td>
                 {(reservation.status === "pending" || reservation.status === "confirmed") && (
-                  <button className="danger-button" onClick={() => handleCancel(reservation)}>
+                  <Button icon={CalendarXIcon} variant="danger" onClick={() => handleCancel(reservation)}>
                     Cancel·la la reserva
-                  </button>
+                  </Button>
                 )}
               </td>
             </tr>

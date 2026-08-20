@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/Button.jsx";
+import { SaveIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function ChangePasswordPage() {
@@ -53,7 +55,9 @@ export default function ChangePasswordPage() {
           />
         </label>
         {error && <p className="error">{error}</p>}
-        <button type="submit">Desar</button>
+        <Button type="submit" icon={SaveIcon} variant="primary">
+          Desar
+        </Button>
       </form>
     </div>
   );

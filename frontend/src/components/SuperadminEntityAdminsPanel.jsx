@@ -1,5 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "./Button.jsx";
+import { CheckIcon, KeyIcon, PlusIcon, TrashIcon, XIcon } from "./icons.jsx";
 
 const EMPTY_FORM = { username: "", full_name: "", initial_password: "" };
 
@@ -85,8 +87,14 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
                 <td>{admin.full_name}</td>
                 <td>{admin.must_change_password ? "Sí" : "No"}</td>
                 <td>
-                  <button onClick={() => handleResetToggle(admin.id)}>Reiniciar contrasenya</button>
-                  <button onClick={() => handleDelete(admin.id)}>Esborrar</button>
+                  <div className="table-actions">
+                    <Button icon={KeyIcon} onClick={() => handleResetToggle(admin.id)}>
+                      Reiniciar contrasenya
+                    </Button>
+                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(admin.id)}>
+                      Esborrar
+                    </Button>
+                  </div>
                 </td>
               </tr>
               {resetId === admin.id && (
@@ -102,10 +110,12 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
                           required
                         />
                       </label>
-                      <button type="submit">Confirmar</button>
-                      <button type="button" onClick={() => setResetId(null)}>
+                      <Button type="submit" icon={CheckIcon} variant="primary">
+                        Confirmar
+                      </Button>
+                      <Button icon={XIcon} onClick={() => setResetId(null)}>
                         Cancel·lar
-                      </button>
+                      </Button>
                     </form>
                   </td>
                 </tr>
@@ -139,13 +149,17 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
               required
             />
           </label>
-          <button type="submit">Crear</button>
-          <button type="button" onClick={() => setForm(null)}>
+          <Button type="submit" icon={PlusIcon} variant="primary">
+            Crear
+          </Button>
+          <Button icon={XIcon} onClick={() => setForm(null)}>
             Cancel·lar
-          </button>
+          </Button>
         </form>
       ) : (
-        <button onClick={() => setForm(EMPTY_FORM)}>Nou administrador</button>
+        <Button icon={PlusIcon} variant="primary" onClick={() => setForm(EMPTY_FORM)}>
+          Nou administrador
+        </Button>
       )}
     </div>
   );

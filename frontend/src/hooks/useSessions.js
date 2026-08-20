@@ -45,7 +45,7 @@ export function useSessions(entityId) {
       );
       await reload();
     } catch (err) {
-      setMessage(err.response?.data?.detail || "No s'ha pogut reservar.");
+      window.alert(err.response?.data?.detail || "No s'ha pogut reservar.");
     }
   }
 
@@ -57,7 +57,7 @@ export function useSessions(entityId) {
       setMessage(`Reserva cancel·lada per a "${session.display_title}".`);
       await reload();
     } catch (err) {
-      setMessage(err.response?.data?.detail || "No s'ha pogut cancel·lar la reserva.");
+      window.alert(err.response?.data?.detail || "No s'ha pogut cancel·lar la reserva.");
     }
   }
 

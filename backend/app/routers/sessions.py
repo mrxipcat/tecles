@@ -3,21 +3,47 @@ from sqlalchemy.orm import Session as DbSession
 
 from app.database import get_db
 from app.dependencies import get_current_admin, get_current_user_optional
-from app.models import Reservation, ReservationStatus, Room, SlotSession, User, UserRole, compose_display_title
+from app.models import (
+    Reservation,
+    ReservationStatus,
+    Room,
+    SlotSession,
+    User,
+    UserRole,
+    VisibilityMode,
+    compose_display_title,
+)
 from app.schemas import SlotSessionCreate, SlotSessionRead, SlotSessionUpdate
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
-def _serialize_session(session: SlotSession, current_user: User | None, db: DbSession) -> SlotSessionRead:
-    occupied = (
+def _occupied_count(session_id: int, db: DbSession) -> int:
+    return (
         db.query(Reservation)
         .filter(
-            Reservation.session_id == session.id,
+            Reservation.session_id == session_id,
             Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]),
         )
         .count()
     )
+
+
+def _has_active_reservation(session_id: int, user_id: int, db: DbSession) -> bool:
+    return (
+        db.query(Reservation)
+        .filter(
+            Reservation.session_id == session_id,
+            Reservation.user_id == user_id,
+            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]),
+        )
+        .first()
+        is not None
+    )
+
+
+def _serialize_session(session: SlotSession, current_user: User | None, db: DbSession) -> SlotSessionRead:
+    occupied = _occupied_count(session.id, db)
     available_places = max(session.capacity - occupied, 0)
 
     show = current_user is not None and (
@@ -66,8 +92,6 @@ def list_sessions(
     db: DbSession = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),
 ):
-    # TODO(sprint6): si l'entitat té visibility_mode == AVAILABLE_ONLY i l'usuari
-    # no és admin, filtrar les sessions sense places lliures.
     query = db.query(SlotSession)
     if entity_id is not None:
         query = query.filter(SlotSession.entity_id == entity_id)
@@ -78,6 +102,16 @@ def list_sessions(
     ):
         query = query.filter(SlotSession.room_id == current_user.assigned_room_id)
     sessions = query.order_by(SlotSession.date, SlotSession.start_time).all()
+
+    if current_user is not None and current_user.role == UserRole.USER:
+        sessions = [
+            session
+            for session in sessions
+            if session.entity.visibility_mode != VisibilityMode.AVAILABLE_ONLY
+            or _occupied_count(session.id, db) < session.capacity
+            or _has_active_reservation(session.id, current_user.id, db)
+        ]
+
     return [_serialize_session(session, current_user, db) for session in sessions]
 
 

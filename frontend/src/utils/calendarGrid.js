@@ -47,7 +47,7 @@ export function isSameDay(a, b) {
 
 export function formatRangeLabel(referenceDate, granularity) {
   if (granularity === "month") {
-    return `${CATALAN_MONTHS[referenceDate.getMonth()]} de ${referenceDate.getFullYear()}`;
+    return `${CATALAN_MONTHS[referenceDate.getMonth()]} ${referenceDate.getFullYear()}`;
   }
   const days = buildWeekDays(referenceDate);
   const start = days[0];

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import client from "../api/client.js";
+import Button from "../components/Button.jsx";
+import { SaveIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AdminEntityConfigPage() {
@@ -137,7 +139,9 @@ export default function AdminEntityConfigPage() {
           Multisala (diverses {entity.room_label_plural.toLowerCase()})
         </label>
         {/* TODO(sprint3): els límits max_reservations_per_* encara no s'apliquen a la lògica de reserves. */}
-        <button type="submit">Desar</button>
+        <Button type="submit" icon={SaveIcon} variant="primary">
+          Desar
+        </Button>
         {saved && <span className="info">Desat correctament.</span>}
       </form>
     </div>

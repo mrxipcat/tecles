@@ -55,12 +55,12 @@ class Entity(Base):
     room_label_singular: Mapped[str] = mapped_column(String(50), nullable=False, default="Sala")
     room_label_plural: Mapped[str] = mapped_column(String(50), nullable=False, default="Sales")
 
-    # TODO(sprint6): aplicar aquests límits en crear una reserva.
+    # Aplicats a `routers/reservations.py::create_reservation`.
     max_reservations_per_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_reservations_per_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_reservations_per_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # TODO(sprint6): aplicar aquest mode en llistar sessions per a usuaris no admin.
+    # Aplicat a `routers/sessions.py::list_sessions` per a usuaris no admin.
     visibility_mode: Mapped[VisibilityMode] = mapped_column(
         Enum(VisibilityMode), nullable=False, default=VisibilityMode.ALWAYS
     )
