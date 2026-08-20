@@ -8,8 +8,10 @@ python-dotenv>=1.0
 # Desplegament a Azure Functions (Managed Functions d'Azure Static Web Apps)
 azure-functions>=1.21
 
-# Connexió a Azure SQL Database en producció (driver TDS pur Python, sense
-# dependència del driver ODBC del sistema; en local es continua fent servir
-# SQLite via DATABASE_URL, vegeu app/config.py).
-python-tds>=1.15
-sqlalchemy-pytds>=1.0
+# Connexió a Azure SQL Database en producció (pymssql -> FreeTDS empaquetat al
+# wheel, sense dependència del driver ODBC del sistema; provat contra una base
+# de dades real d'Azure SQL. python-tds/sqlalchemy-pytds es van descartar: la
+# seva validació TLS trenca amb versions actuals de pyOpenSSL i Azure SQL
+# exigeix connexió xifrada. En local es continua fent servir SQLite via
+# DATABASE_URL, vegeu app/config.py).
+pymssql>=2.3

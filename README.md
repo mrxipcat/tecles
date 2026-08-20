@@ -224,19 +224,26 @@ prefix "api/" per sobre del que ja declaren els routers de FastAPI (`prefix="/ap
 crides `/api/...` funcionen igual en local, en Managed Functions directament i a través de
 Static Web Apps.
 
-### Pendent de fer manualment (Portal d'Azure — no ho puc fer des d'aquí)
+### Base de dades (ja creada)
 
-1. **Base de dades**: crear un **Azure SQL Database (nivell Free)**. SQLite només és vàlid en
-   local — el sistema de fitxers de Managed Functions no és persistent entre execucions.
-2. Construir la cadena de connexió amb el dialecte pur Python (sense driver ODBC):
-   `mssql+pytds://<usuari>:<contrasenya>@<servidor>.database.windows.net:1433/<base_de_dades>`
-3. Definir-la com a variable d'entorn **`DATABASE_URL`** a la configuració ("Environment
-   variables"/"Configuration") de la Static Web App al Portal d'Azure — s'aplica a la Function
-   vinculada.
-4. Confirmar que el domini personalitzat `tecles.com` segueix vinculat al mateix recurs (no
-   l'hem tocat, només el contingut que hi desplega GitHub Actions).
-5. Al primer desplegament amb la base de dades nova, l'aplicació crea les taules i les dades
-   de llavor (seed) automàticament, igual que en local.
+- **Azure SQL Database, nivell Free** (`teclesdb` al servidor `teclesweb-sql`, grup de recursos
+  `TECLES`, regió West Europe), creada amb `--use-free-limit` i
+  `--free-limit-exhaustion-behavior AutoPause`: si mai s'exhaureix la quota gratuïta (100.000
+  segons-vCore/mes + 32 GB), la base de dades es pausa automàticament en lloc de començar a
+  facturar.
+- Driver de connexió: **`pymssql`** (empaqueta FreeTDS al wheel, sense dependència del driver
+  ODBC del sistema). Es va provar primer amb `python-tds`/`sqlalchemy-pytds` (pur Python), però
+  la seva validació TLS trenca amb versions actuals de pyOpenSSL i Azure SQL exigeix connexió
+  xifrada — `pymssql` sí que connecta correctament (provat contra la base de dades real).
+- Regla de tallafocs `AllowAzureServices` (0.0.0.0) perquè les Managed Functions hi puguin
+  connectar.
+- La cadena de connexió ja està configurada com a variable d'entorn **`DATABASE_URL`** de la
+  Static Web App `teclesweb` (Portal d'Azure → Configuration). La contrasenya de l'usuari
+  `teclesadmin` es va generar aleatòriament — si mai cal rotar-la: `az sql server update
+  --resource-group TECLES --name teclesweb-sql --admin-password <nova>` i actualitzar
+  `DATABASE_URL` en conseqüència amb `az staticwebapp appsettings set`.
+- Al primer desplegament, l'aplicació crea les taules i les dades de llavor (seed)
+  automàticament contra aquesta base de dades, igual que en local amb SQLite.
 
-No hi ha cap eina `az`/Azure CLI disponible en aquest entorn de desenvolupament, així que
-aquests passos només es poden fer des del Portal d'Azure directament.
+El domini personalitzat `tecles.com` segueix vinculat al mateix recurs `teclesweb` (no s'ha
+tocat, només el contingut que hi desplega GitHub Actions).
