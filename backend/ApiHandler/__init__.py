@@ -4,10 +4,15 @@ FastAPI existent amb el pont ASGI d'Azure Functions.
 Es fa servir el model V1 (aquesta carpeta + `function.json`) en lloc del
 `function_app.py` d'un sol fitxer (model V2) perquè les Managed Functions
 d'Azure Static Web Apps van fallar sistemàticament en desplegar-se amb el
-model V2 (`AsgiFunctionApp`) — el `host.json` segueix fixant `routePrefix` a
-"api" (obligatori en Managed Functions), i com que els routers de FastAPI no
-declaren el seu propi prefix "/api" (vegeu `app/main.py`), el path que rep
-aquesta funció ja és el correcte.
+model V2 (`AsgiFunctionApp`).
+
+`host.json` fixa `routePrefix` a "api" (obligatori en Managed Functions —
+qualsevol altre valor fa fallar el desplegament). Aquest prefix només serveix
+perquè Functions decideixi QUINA funció ha d'atendre la petició (aquí, el
+catch-all `{*route}`) — `req.url`, i per tant el path ASGI que rep FastAPI,
+conserva el path original sencer tal com l'ha demanat el navegador
+(`/api/...`). Per això els routers de FastAPI SÍ declaren el seu propi prefix
+"/api" (vegeu `app/main.py`), igual que en local.
 """
 
 import azure.functions as func

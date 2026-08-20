@@ -205,8 +205,7 @@ Usuaris" (per a la seva pròpia entitat) i un superadministrador des de "Superad
 Aquest repositori té vinculat un recurs d'Azure Static Web Apps existent (domini `tecles.com`),
 amb el flux d'Azure Functions "Managed" que preveia l'arquitectura final: el frontend es
 serveix com a contingut estàtic i el backend FastAPI es desplega com una Azure Function
-única que embolcalla tota l'app amb el pont ASGI (`backend/function_app.py`), sense haver de
-reescriure cap endpoint.
+única que embolcalla tota l'app amb el pont ASGI, sense haver de reescriure cap endpoint.
 
 ### Automatitzat (GitHub Actions)
 
@@ -214,18 +213,30 @@ Cada `push` a `main` dispara `.github/workflows/azure-static-web-apps-mango-dune
 que:
 - Construeix `frontend/` (Vite) com a `app_location` i en desplega `frontend/dist` com a
   `output_location`.
-- Construeix `backend/` com a `api_location` (Managed Functions, runtime `python:3.11` fixat a
-  `frontend/staticwebapp.config.json`) i el desplega a la mateixa Static Web App.
+- Construeix `backend/` com a `api_location` (Managed Functions, runtime `python:3.10` fixat a
+  `frontend/staticwebapp.config.json` — Managed Functions no admet 3.11) i el desplega a la
+  mateixa Static Web App.
 - No cal cap recurs d'Azure nou per a això — reutilitza el que ja existia i que servia la
   landing page anterior.
 
-Les Managed Functions de Static Web Apps exigeixen que `backend/host.json` mantingui
-`http.routePrefix` a `"api"` (no es pot desactivar ni canviar — un desplegament amb un altre
-valor falla en temps de build). Com que Azure ja consumeix aquest "api/" abans d'invocar la
-Function, els routers de FastAPI **no** declaren el seu propi prefix `/api` (vegeu
-`backend/app/main.py`). El proxy de desenvolupament de Vite fa la mateixa reescriptura
-(`frontend/vite.config.js`: `rewrite: (path) => path.replace(/^\/api/, "")`), així el frontend
-sempre crida `/api/...` sense saber-ho, tant en local com en producció.
+**Detalls de la integració amb Azure Functions** (costosos de descobrir, documentats perquè no
+calgui repetir-ho):
+- Es fa servir el **model V1** de Functions (`backend/ApiHandler/__init__.py` +
+  `function.json`), no el model V2 d'un sol fitxer (`function_app.py` + `AsgiFunctionApp`): el
+  V2 fallava sistemàticament en desplegar-se a Managed Functions amb l'error genèric "Failed to
+  deploy the Azure Functions" (confirmat que no era un problema intermitent — reproduït diverses
+  vegades amb el mateix commit).
+- `backend/host.json` fixa `http.routePrefix` a `"api"` (Managed Functions no accepta cap altre
+  valor — un desplegament amb `routePrefix: ""` falla en temps de build). Aquest prefix només
+  determina QUINA Function atén la petició (aquí, el catch-all `{*route}`); `req.url` (i per
+  tant el path ASGI que rep FastAPI) conserva el path original sencer (`/api/...`), així que els
+  routers de FastAPI SÍ declaren el seu propi prefix `/api` (vegeu `backend/app/main.py`),
+  exactament igual que en local.
+- El pont ASGI d'Azure Functions (`AsgiMiddleware`) **no envia el protocol de lifespan d'ASGI**,
+  així que l'esdeveniment `@app.on_event("startup")` de FastAPI (creació de taules + llavor) mai
+  s'executaria en producció. Per això aquesta lògica viu en una funció reutilitzable
+  (`ensure_db_ready()` a `app/main.py`) que `ApiHandler/__init__.py` crida explícitament en
+  importar-se el mòdul (un sol cop per arrencada freda del contenidor).
 
 ### Base de dades (ja creada)
 
@@ -250,3 +261,22 @@ sempre crida `/api/...` sense saber-ho, tant en local com en producció.
 
 El domini personalitzat `tecles.com` segueix vinculat al mateix recurs `teclesweb` (no s'ha
 tocat, només el contingut que hi desplega GitHub Actions).
+
+### Observabilitat
+
+Les Managed Functions només registren logs si hi ha Application Insights activat. Ja se n'ha
+creat un (`teclesweb-insights`, grup de recursos `TECLES`) i vinculat a la Static Web App via
+les variables d'entorn `APPLICATIONINSIGHTS_CONNECTION_STRING`/`APPINSIGHTS_INSTRUMENTATIONKEY`.
+Per consultar l'últim error real (no el missatge genèric que es veu al log de GitHub Actions):
+
+```bash
+az monitor app-insights query --app teclesweb-insights --resource-group TECLES \
+  --analytics-query "exceptions | order by timestamp desc | take 5"
+```
+
+Per veure l'estat dels desplegaments:
+
+```bash
+gh run list --repo mrxipcat/tecles
+gh run view <run-id> --repo mrxipcat/tecles --log-failed
+```
