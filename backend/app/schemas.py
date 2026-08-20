@@ -30,10 +30,22 @@ class EntityCreate(EntityBase):
 
 class EntityUpdate(BaseModel):
     name: str | None = None
+    code: str | None = None
     slot_label_singular: str | None = None
     slot_label_plural: str | None = None
     room_label_singular: str | None = None
     room_label_plural: str | None = None
+    max_reservations_per_day: int | None = None
+    max_reservations_per_week: int | None = None
+    max_reservations_per_month: int | None = None
+    visibility_mode: VisibilityMode | None = None
+    show_available_places: bool | None = None
+    auto_confirm_reservations: bool | None = None
+    is_multiroom: bool | None = None
+
+
+class EntitySelfUpdate(BaseModel):
+    # Sense name/slot_label_*/room_label_*: només un superadministrador els pot canviar.
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -48,6 +60,13 @@ class EntityRead(EntityBase):
 
     id: int
     created_at: datetime
+
+
+class EntityPublicRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    code: str
 
 
 # ---------- User ----------

@@ -21,11 +21,6 @@ export default function AdminEntityConfigPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     const payload = {
-      name: entity.name,
-      slot_label_singular: entity.slot_label_singular,
-      slot_label_plural: entity.slot_label_plural,
-      room_label_singular: entity.room_label_singular,
-      room_label_plural: entity.room_label_plural,
       max_reservations_per_day: entity.max_reservations_per_day || null,
       max_reservations_per_week: entity.max_reservations_per_week || null,
       max_reservations_per_month: entity.max_reservations_per_month || null,
@@ -48,38 +43,6 @@ export default function AdminEntityConfigPage() {
     <div className="page">
       <h1>Configuració de l'entitat</h1>
       <form className="admin-form" onSubmit={handleSubmit}>
-        <label>
-          Nom de l'entitat
-          <input value={entity.name} onChange={(e) => handleChange("name", e.target.value)} />
-        </label>
-        <label>
-          Nom en singular (p. ex. "Sessió", "Aula", "Sala")
-          <input
-            value={entity.slot_label_singular}
-            onChange={(e) => handleChange("slot_label_singular", e.target.value)}
-          />
-        </label>
-        <label>
-          Nom en plural (p. ex. "Sessions", "Aules", "Sales")
-          <input
-            value={entity.slot_label_plural}
-            onChange={(e) => handleChange("slot_label_plural", e.target.value)}
-          />
-        </label>
-        <label>
-          Nom de la sala en singular (p. ex. "Sala", "Aula", "Despatx")
-          <input
-            value={entity.room_label_singular}
-            onChange={(e) => handleChange("room_label_singular", e.target.value)}
-          />
-        </label>
-        <label>
-          Nom de la sala en plural (p. ex. "Sales", "Aules", "Despatxos")
-          <input
-            value={entity.room_label_plural}
-            onChange={(e) => handleChange("room_label_plural", e.target.value)}
-          />
-        </label>
         <label>
           Màxim de reserves per dia
           <input
@@ -136,7 +99,7 @@ export default function AdminEntityConfigPage() {
             checked={entity.is_multiroom}
             onChange={(e) => handleChange("is_multiroom", e.target.checked)}
           />
-          Multisala (diverses {entity.room_label_plural.toLowerCase()})
+          Multi-{entity.room_label_singular}
         </label>
         {/* TODO(sprint3): els límits max_reservations_per_* encara no s'apliquen a la lògica de reserves. */}
         <Button type="submit" icon={SaveIcon} variant="primary">

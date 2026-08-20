@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import { LogInIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -25,6 +26,15 @@ export default function LoginPage() {
   const [entityCode, setEntityCode] = useState(fixedEntityCode || "demo");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [entityName, setEntityName] = useState(null);
+
+  useEffect(() => {
+    if (!fixedEntityCode) return;
+    client
+      .get(`/entities/by-code/${fixedEntityCode}`)
+      .then((res) => setEntityName(res.data.name))
+      .catch(() => setEntityName(null));
+  }, [fixedEntityCode]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -39,7 +49,7 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <h1>Entrar</h1>
+      <h1>{fixedEntityCode && entityName ? `Entrar a ${entityName}` : "Entrar"}</h1>
       <form onSubmit={handleSubmit}>
         {!fixedEntityCode && (
           <label>

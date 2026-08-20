@@ -55,7 +55,15 @@ def create_entity(payload: EntityCreate, db: DbSession = Depends(get_db)):
 @router.patch("/entities/{entity_id}", response_model=EntityRead)
 def update_entity(entity_id: int, payload: EntityUpdate, db: DbSession = Depends(get_db)):
     entity = _get_entity(entity_id, db)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+
+    new_code = data.get("code")
+    if new_code and new_code != entity.code:
+        existing = db.query(Entity).filter(Entity.code == new_code).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ja existeix una entitat amb aquest codi")
+
+    for field, value in data.items():
         setattr(entity, field, value)
     db.commit()
     db.refresh(entity)

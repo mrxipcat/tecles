@@ -445,6 +445,20 @@ td {
   border-bottom: 1px solid #e2e2e2;
 }
 
+.alias-table {
+  width: auto;
+  margin: 0;
+}
+
+.alias-table th,
+.alias-table td {
+  padding: 0.25rem 0.5rem;
+}
+
+.alias-table input {
+  width: 8rem;
+}
+
 .login-page {
   max-width: 400px;
   margin: 2rem auto;

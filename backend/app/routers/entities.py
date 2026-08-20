@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.database import get_db
 from app.dependencies import get_current_admin
 from app.models import Entity, User
-from app.schemas import EntityRead, EntityUpdate
+from app.schemas import EntityPublicRead, EntityRead, EntitySelfUpdate
 
 router = APIRouter(prefix="/entities", tags=["entities"])
 
@@ -12,6 +12,14 @@ router = APIRouter(prefix="/entities", tags=["entities"])
 @router.get("", response_model=list[EntityRead])
 def list_entities(db: DbSession = Depends(get_db)):
     return db.query(Entity).all()
+
+
+@router.get("/by-code/{code}", response_model=EntityPublicRead)
+def get_entity_by_code(code: str, db: DbSession = Depends(get_db)):
+    entity = db.query(Entity).filter(Entity.code == code).first()
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entitat no trobada")
+    return entity
 
 
 @router.get("/{entity_id}", response_model=EntityRead)
@@ -25,7 +33,7 @@ def get_entity(entity_id: int, db: DbSession = Depends(get_db)):
 @router.patch("/{entity_id}", response_model=EntityRead)
 def update_entity(
     entity_id: int,
-    payload: EntityUpdate,
+    payload: EntitySelfUpdate,
     db: DbSession = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
