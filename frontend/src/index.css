@@ -1,0 +1,553 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: #1f2937;
+  color: white;
+}
+
+.navbar-brand {
+  font-weight: 700;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar-links a {
+  color: white;
+  text-decoration: none;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-user a {
+  color: white;
+}
+
+.main-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.session-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.session-card {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.session-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.session-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.session-card-heading h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.session-card-date {
+  font-size: 0.78rem;
+}
+
+.chevron-button {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.chevron-button.is-expanded {
+  transform: rotate(180deg);
+}
+
+.session-card-description {
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0;
+}
+
+.session-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.session-card-footer button {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.is-available {
+  background: #eaf7ee;
+  border-color: #bfe3c9;
+}
+
+.is-full {
+  background: #fdecea;
+  border-color: #f3c2bd;
+}
+
+.is-mine {
+  background: #e5f0fb;
+  border-color: #b8d4ef;
+}
+
+/* Compound selectors so these win regardless of source order against
+   .session-chip / .session-detail-panel's own `background` declarations
+   further down this file (equal specificity would otherwise let source
+   order decide, which broke the calendar colors). */
+.session-card.is-available,
+.session-chip.is-available,
+.session-detail-panel.is-available,
+.week-event-block.is-available {
+  background: #eaf7ee;
+  border-color: #bfe3c9;
+}
+
+.session-card.is-full,
+.session-chip.is-full,
+.session-detail-panel.is-full,
+.week-event-block.is-full {
+  background: #fdecea;
+  border-color: #f3c2bd;
+}
+
+.session-card.is-mine,
+.session-chip.is-mine,
+.session-detail-panel.is-mine,
+.week-event-block.is-mine {
+  background: #e5f0fb;
+  border-color: #b8d4ef;
+}
+
+.my-reservations-table tr.is-mine td {
+  background: #e5f0fb;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  text-decoration: underline;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.calendar-range-label {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.calendar-granularity {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.calendar-granularity button.active {
+  background: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
+
+.room-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+}
+
+.room-filter-button {
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  background: white;
+  border: 1px solid #e2e2e2;
+}
+
+.room-filter-button.is-active {
+  background: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
+
+.calendar-weekday-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.calendar-weekday-label {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6b7280;
+  padding: 0.25rem 0;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-cell {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  min-height: 90px;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.calendar-cell.is-outside-month {
+  background: #f0f0f0;
+  color: #9aa0a6;
+}
+
+.calendar-cell.is-today .calendar-cell-daynum {
+  font-weight: 700;
+  color: #1f2937;
+  text-decoration: underline;
+}
+
+.calendar-cell-daynum {
+  font-size: 0.8rem;
+}
+
+.calendar-cell-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.session-chip.is-selected {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.session-chip-time {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.week-timeline {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+.week-timeline-header {
+  display: flex;
+  gap: 2px;
+}
+
+.week-timeline-gutter {
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.week-timeline-daylabel {
+  flex: 1;
+  min-width: 90px;
+  text-align: center;
+  padding: 0.35rem 0;
+  color: #374151;
+}
+
+.week-timeline-daylabel.is-today {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.week-timeline-weekday {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.week-timeline-daynum {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.week-timeline-body {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.week-timeline-hours {
+  width: 48px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.week-timeline-hour-label {
+  position: absolute;
+  left: 0;
+  right: 6px;
+  transform: translateY(-0.5em);
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.week-timeline-days {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+}
+
+.week-timeline-day-column {
+  flex: 1;
+  min-width: 90px;
+  position: relative;
+  background-repeat: repeat-y;
+  background-image: linear-gradient(to bottom, #e2e2e2 1px, transparent 1px);
+  border-left: 1px solid #f0f0f0;
+}
+
+.week-event-block {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-event-block.is-selected {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+  z-index: 2;
+}
+
+.week-event-time {
+  font-weight: 600;
+}
+
+.week-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-detail-panel {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.session-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.calendar-detail-placeholder {
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.login-page {
+  max-width: 400px;
+  margin: 2rem auto;
+}
+
+.login-warning {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-form {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.info {
+  color: #0a7d2c;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.my-reservation-note {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #374151;
+  margin: 0.35rem 0 0;
+}
+
+.danger-button {
+  background: #fdecea;
+  border: 1px solid #f3c2bd;
+  color: #a12b22;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+}
+
+.reservations-panel {
+  background: #fafafa;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: -0.5rem 0 1rem;
+}
+
+.reservations-panel h4 {
+  margin-bottom: 0.5rem;
+}
+
+.reservations-panel section {
+  margin-bottom: 1rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inline-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.inline-form label {
+  margin-bottom: 0;
+}

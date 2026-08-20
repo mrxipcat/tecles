@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+backend/.venv/
+backend/webaules.db
+*.db
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# Env
+.env
