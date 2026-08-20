@@ -7,14 +7,17 @@ from app.security import decode_token
 
 
 def get_current_user(
-    authorization: str | None = Header(default=None),
+    x_auth_token: str | None = Header(default=None, alias="X-Auth-Token"),
     db: DbSession = Depends(get_db),
 ) -> User:
-    if not authorization or not authorization.lower().startswith("bearer "):
+    # Es fa servir una capçalera pròpia ("X-Auth-Token") en lloc de la
+    # "Authorization" estàndard perquè Azure Static Web Apps sobreescriu
+    # aquesta última amb el seu propi token intern abans d'arribar a les
+    # Managed Functions (comportament conegut i documentat de la plataforma).
+    if not x_auth_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No autenticat")
 
-    token = authorization.split(" ", 1)[1]
-    payload = decode_token(token)
+    payload = decode_token(x_auth_token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invàlid")
 
@@ -38,14 +41,13 @@ def get_current_superadmin(user: User = Depends(get_current_user)) -> User:
 
 
 def get_current_user_optional(
-    authorization: str | None = Header(default=None),
+    x_auth_token: str | None = Header(default=None, alias="X-Auth-Token"),
     db: DbSession = Depends(get_db),
 ) -> User | None:
-    if not authorization or not authorization.lower().startswith("bearer "):
+    if not x_auth_token:
         return None
 
-    token = authorization.split(" ", 1)[1]
-    payload = decode_token(token)
+    payload = decode_token(x_auth_token)
     if not payload:
         return None
 

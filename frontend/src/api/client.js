@@ -9,7 +9,7 @@ client.interceptors.request.use((config) => {
   if (raw) {
     const { token } = JSON.parse(raw);
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers["X-Auth-Token"] = token;
     }
   }
   return config;
