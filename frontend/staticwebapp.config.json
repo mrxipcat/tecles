@@ -4,6 +4,6 @@
     "exclude": ["/api/*", "/assets/*"]
   },
   "platform": {
-    "apiRuntime": "python:3.11"
+    "apiRuntime": "python:3.10"
   }
 }
