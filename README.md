@@ -219,10 +219,13 @@ que:
 - No cal cap recurs d'Azure nou per a això — reutilitza el que ja existia i que servia la
   landing page anterior.
 
-`backend/host.json` fixa `routePrefix` a buit perquè Azure Functions no afegeixi el seu propi
-prefix "api/" per sobre del que ja declaren els routers de FastAPI (`prefix="/api"`); així les
-crides `/api/...` funcionen igual en local, en Managed Functions directament i a través de
-Static Web Apps.
+Les Managed Functions de Static Web Apps exigeixen que `backend/host.json` mantingui
+`http.routePrefix` a `"api"` (no es pot desactivar ni canviar — un desplegament amb un altre
+valor falla en temps de build). Com que Azure ja consumeix aquest "api/" abans d'invocar la
+Function, els routers de FastAPI **no** declaren el seu propi prefix `/api` (vegeu
+`backend/app/main.py`). El proxy de desenvolupament de Vite fa la mateixa reescriptura
+(`frontend/vite.config.js`: `rewrite: (path) => path.replace(/^\/api/, "")`), així el frontend
+sempre crida `/api/...` sense saber-ho, tant en local com en producció.
 
 ### Base de dades (ja creada)
 

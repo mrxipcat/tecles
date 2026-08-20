@@ -16,13 +16,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(entities.router, prefix="/api")
-app.include_router(sessions.router, prefix="/api")
-app.include_router(reservations.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
-app.include_router(superadmin.router, prefix="/api")
-app.include_router(rooms.router, prefix="/api")
+app.include_router(auth.router)
+app.include_router(entities.router)
+app.include_router(sessions.router)
+app.include_router(reservations.router)
+app.include_router(users.router)
+app.include_router(superadmin.router)
+app.include_router(rooms.router)
 
 
 @app.on_event("startup")
@@ -35,6 +35,6 @@ def on_startup() -> None:
         db.close()
 
 
-@app.get("/api/health")
+@app.get("/health")
 def health():
     return {"status": "ok"}
