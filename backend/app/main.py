@@ -1,6 +1,9 @@
+import time
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import OperationalError
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
@@ -49,6 +52,23 @@ def _migrate_legacy_assigned_room() -> None:
         )
 
 
+def _retry_on_transient_db_error(fn, attempts: int = 5, delay_seconds: float = 5.0) -> None:
+    """Azure SQL Serverless posa la base de dades en pausa quan no hi ha activitat; la
+    primera connexió després d'una pausa pot trigar mig minut a "despertar-la" i mentrestant
+    respon amb un OperationalError transitori. Com que aquesta funció es crida en important
+    el mòdul (vegeu `ensure_db_ready`), una excepció aquí deixa el worker de Functions
+    permanentment trencat fins al següent arrencada freda — per això cal reintentar-ho aquí
+    en lloc de deixar-la pujar."""
+    for attempt in range(1, attempts + 1):
+        try:
+            fn()
+            return
+        except OperationalError:
+            if attempt == attempts:
+                raise
+            time.sleep(delay_seconds)
+
+
 def ensure_db_ready() -> None:
     """Crea les taules i sembra les dades de demo si cal.
 
@@ -57,13 +77,17 @@ def ensure_db_ready() -> None:
     el pont ASGI d'Azure Functions no envia el protocol de lifespan d'ASGI, així
     que l'esdeveniment `startup` mai s'hi executaria si no es crida a mà.
     """
-    Base.metadata.create_all(bind=engine)
-    _migrate_legacy_assigned_room()
-    db = SessionLocal()
-    try:
-        run_seed(db)
-    finally:
-        db.close()
+    _retry_on_transient_db_error(lambda: Base.metadata.create_all(bind=engine))
+    _retry_on_transient_db_error(_migrate_legacy_assigned_room)
+
+    def _seed() -> None:
+        db = SessionLocal()
+        try:
+            run_seed(db)
+        finally:
+            db.close()
+
+    _retry_on_transient_db_error(_seed)
 
 
 @app.on_event("startup")
