@@ -80,19 +80,18 @@ def create_reservation(
     db: DbSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role == UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Els administradors no poden fer reserves")
-
     session = db.get(SlotSession, payload.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Sessió no trobada")
     if session.entity_id != current_user.entity_id:
         raise HTTPException(status_code=403, detail="No pots reservar una sessió d'una altra entitat")
-    if current_user.assigned_room_id is not None and session.room_id != current_user.assigned_room_id:
-        room_singular = current_user.entity.room_label_singular.lower()
-        raise HTTPException(
-            status_code=403, detail=f"No pots reservar en {room_singular} fora de la que tens assignada"
-        )
+    if current_user.role == UserRole.USER and current_user.entity.is_multiroom:
+        visible_ids = set(current_user.visible_room_ids)
+        if visible_ids and session.room_id not in visible_ids:
+            raise HTTPException(
+                status_code=403,
+                detail="No pots reservar en un grup fora dels que tens assignats",
+            )
 
     occupied = (
         db.query(Reservation)
@@ -180,6 +179,10 @@ def cancel_reservation(
     )
     if not (is_owner or is_admin_same_entity):
         raise HTTPException(status_code=403, detail="No pots cancel·lar aquesta reserva")
+    if reservation.status not in ACTIVE_STATUSES:
+        raise HTTPException(status_code=400, detail="Aquesta reserva ja no és activa")
 
-    reservation.status = ReservationStatus.CANCELLED
+    reservation.status = (
+        ReservationStatus.CANCELLED_BY_ADMIN if (is_admin_same_entity and not is_owner) else ReservationStatus.CANCELLED
+    )
     db.commit()

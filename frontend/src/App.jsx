@@ -46,7 +46,7 @@ export default function App() {
           <Route
             path="/les-meves-reserves"
             element={
-              <ProtectedRoute blockAdmin>
+              <ProtectedRoute>
                 <MyReservationsPage />
               </ProtectedRoute>
             }

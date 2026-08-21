@@ -3,12 +3,15 @@ from datetime import date as date_, datetime, time as time_
 
 from sqlalchemy import (
     Boolean,
+    Column,
     Date,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
     String,
+    Table,
+    Text,
     Time,
     UniqueConstraint,
 )
@@ -42,6 +45,7 @@ class ReservationStatus(str, enum.Enum):
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
     CANCELLED = "cancelled"
+    CANCELLED_BY_ADMIN = "cancelled_by_admin"
 
 
 class Entity(Base):
@@ -52,8 +56,6 @@ class Entity(Base):
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     slot_label_singular: Mapped[str] = mapped_column(String(50), nullable=False, default="Sessió")
     slot_label_plural: Mapped[str] = mapped_column(String(50), nullable=False, default="Sessions")
-    room_label_singular: Mapped[str] = mapped_column(String(50), nullable=False, default="Sala")
-    room_label_plural: Mapped[str] = mapped_column(String(50), nullable=False, default="Sales")
 
     # Aplicats a `routers/reservations.py::create_reservation`.
     max_reservations_per_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -88,6 +90,14 @@ class Room(Base):
     sessions: Mapped[list["SlotSession"]] = relationship(back_populates="room")
 
 
+user_rooms = Table(
+    "user_rooms",
+    Base.metadata,
+    Column("user_id", ForeignKey("users.id"), primary_key=True),
+    Column("room_id", ForeignKey("rooms.id"), primary_key=True),
+)
+
+
 class User(Base):
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("entity_id", "username", name="uq_user_entity_username"),)
@@ -99,17 +109,20 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.USER)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    # Si s'omple, restringeix aquest usuari a veure/reservar només els slots d'aquesta sala.
-    assigned_room_id: Mapped[int | None] = mapped_column(ForeignKey("rooms.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     entity: Mapped["Entity | None"] = relationship(back_populates="users")
-    assigned_room: Mapped["Room | None"] = relationship(foreign_keys=[assigned_room_id])
+    # Cap grup assignat = sense restricció (veu tots els grups). Un o més = restringit a aquests.
+    visible_rooms: Mapped[list["Room"]] = relationship(secondary=user_rooms)
     reservations: Mapped[list["Reservation"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     @property
-    def assigned_room_name(self) -> str | None:
-        return self.assigned_room.name if self.assigned_room else None
+    def visible_room_ids(self) -> list[int]:
+        return [room.id for room in self.visible_rooms]
+
+    @property
+    def visible_room_names(self) -> list[str]:
+        return [room.name for room in self.visible_rooms]
 
 
 class SlotSession(Base):
@@ -121,7 +134,7 @@ class SlotSession(Base):
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id"), nullable=False)
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"), nullable=False)
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     date: Mapped[date_] = mapped_column(Date, nullable=False)
     start_time: Mapped[time_] = mapped_column(Time, nullable=False)
     end_time: Mapped[time_] = mapped_column(Time, nullable=False)
@@ -163,7 +176,7 @@ class Reservation(Base):
 
     @property
     def session_title(self) -> str:
-        show_room = self.session.entity.is_multiroom and self.user.assigned_room_id is None
+        show_room = self.session.entity.is_multiroom and len(self.user.visible_rooms) != 1
         return compose_display_title(self.session.title, self.session.room_name, show_room)
 
     @property

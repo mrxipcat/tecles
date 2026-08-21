@@ -11,11 +11,15 @@ import { buildMonthDays, buildWeekDays, formatRangeLabel } from "../utils/calend
 
 export default function SessionsCalendarPage() {
   const { user, entity, isAdmin } = useAuth();
-  const { sessions, rooms, activeRoomIds, toggleRoom, message, reserve, cancel } = useSessions(user.entity_id);
+  const { sessions, rooms, activeRoomIds, toggleRoom, message, reserve, cancel } = useSessions(
+    user.entity_id,
+    isAdmin ? null : user.visible_room_ids
+  );
   const [granularity, setGranularity] = useState("month");
   const [referenceDate, setReferenceDate] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState(null);
   const plural = entity?.slot_label_plural ?? "Sessions";
+  const showRoomFilter = entity?.is_multiroom && (isAdmin || (user.visible_room_ids?.length ?? 0) !== 1);
 
   const days = useMemo(
     () => (granularity === "month" ? buildMonthDays(referenceDate) : buildWeekDays(referenceDate)),
@@ -42,9 +46,7 @@ export default function SessionsCalendarPage() {
   return (
     <div className="page">
       <h1>Calendari de {plural.toLowerCase()}</h1>
-      {entity?.is_multiroom && !user.assigned_room_id && (
-        <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />
-      )}
+      {showRoomFilter && <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />}
       {message && <p className="info">{message}</p>}
       <div className="calendar-toolbar">
         <div className="calendar-nav">
@@ -94,8 +96,8 @@ export default function SessionsCalendarPage() {
       )}
       <SessionDetailPanel
         session={selectedSession}
-        onReserve={isAdmin ? undefined : reserve}
-        onCancel={isAdmin ? undefined : cancel}
+        onReserve={reserve}
+        onCancel={cancel}
         onClose={() => setSelectedId(null)}
       />
     </div>

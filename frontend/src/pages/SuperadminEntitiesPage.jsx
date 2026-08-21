@@ -9,8 +9,6 @@ const EMPTY_FORM = {
   code: "",
   slot_label_singular: "Sessió",
   slot_label_plural: "Sessions",
-  room_label_singular: "Sala",
-  room_label_plural: "Sales",
 };
 
 function AliasFieldsTable({ values, onChange }) {
@@ -41,23 +39,6 @@ function AliasFieldsTable({ values, onChange }) {
             />
           </td>
         </tr>
-        <tr>
-          <td>Sala</td>
-          <td>
-            <input
-              value={values.room_label_singular}
-              onChange={(e) => onChange("room_label_singular", e.target.value)}
-              required
-            />
-          </td>
-          <td>
-            <input
-              value={values.room_label_plural}
-              onChange={(e) => onChange("room_label_plural", e.target.value)}
-              required
-            />
-          </td>
-        </tr>
       </tbody>
     </table>
   );
@@ -69,8 +50,6 @@ function entityToEditForm(entity) {
     code: entity.code,
     slot_label_singular: entity.slot_label_singular,
     slot_label_plural: entity.slot_label_plural,
-    room_label_singular: entity.room_label_singular,
-    room_label_plural: entity.room_label_plural,
   };
 }
 

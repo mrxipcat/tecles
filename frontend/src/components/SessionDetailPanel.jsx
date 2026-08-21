@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext.jsx";
 import Button from "./Button.jsx";
+import RichTextContent from "./RichTextContent.jsx";
 import { CalendarPlusIcon, CalendarXIcon, XIcon } from "./icons.jsx";
 import { availabilityClass, availabilityText } from "../utils/availability.js";
 
@@ -34,7 +35,7 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
       <p className="session-card-date">
         {session.date} · {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
       </p>
-      {session.description && <p>{session.description}</p>}
+      <RichTextContent html={session.description} />
       {session.my_reservation_status && (
         <p className="my-reservation-note">
           {session.my_reservation_status === "pending"

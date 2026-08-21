@@ -1,6 +1,7 @@
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import Button from "./Button.jsx";
-import { LogOutIcon } from "./icons.jsx";
+import { ChevronDownIcon, LogOutIcon } from "./icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function navLinkClass({ isActive }) {
@@ -9,9 +10,27 @@ function navLinkClass({ isActive }) {
 
 export default function Navbar() {
   const { user, entity, isAuthenticated, isAdmin, isSuperadmin, logout } = useAuth();
+  const location = useLocation();
   const plural = entity?.slot_label_plural ?? "Sessions";
-  const roomPlural = entity?.room_label_plural ?? "Sales";
   const brand = isAuthenticated && entity ? entity.name : "Tecles";
+  const isAdminRouteActive = location.pathname.startsWith("/admin");
+
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const adminMenuRef = useRef(null);
+
+  useEffect(() => {
+    setAdminMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
+        setAdminMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="navbar">
@@ -30,28 +49,38 @@ export default function Navbar() {
             <NavLink to="/calendari" className={navLinkClass}>
               Calendari
             </NavLink>
-            {!isAdmin && (
-              <NavLink to="/les-meves-reserves" className={navLinkClass}>
-                Les meves reserves
-              </NavLink>
-            )}
+            <NavLink to="/les-meves-reserves" className={navLinkClass}>
+              Les meves reserves
+            </NavLink>
             {isAdmin && (
-              <>
-                <NavLink to="/admin/sessions" className={navLinkClass}>
-                  {plural}
-                </NavLink>
-                {entity?.is_multiroom && (
-                  <NavLink to="/admin/sales" className={navLinkClass}>
-                    {roomPlural}
-                  </NavLink>
+              <div className="nav-dropdown" ref={adminMenuRef}>
+                <button
+                  type="button"
+                  className={`nav-link nav-dropdown-toggle ${isAdminRouteActive ? "is-active" : ""}`}
+                  onClick={() => setAdminMenuOpen((prev) => !prev)}
+                >
+                  Administració
+                  <ChevronDownIcon />
+                </button>
+                {adminMenuOpen && (
+                  <div className="nav-dropdown-menu">
+                    <NavLink to="/admin/sessions" className={navLinkClass}>
+                      {plural}
+                    </NavLink>
+                    {entity?.is_multiroom && (
+                      <NavLink to="/admin/sales" className={navLinkClass}>
+                        Grups
+                      </NavLink>
+                    )}
+                    <NavLink to="/admin/usuaris" className={navLinkClass}>
+                      Usuaris
+                    </NavLink>
+                    <NavLink to="/admin/entitat" className={navLinkClass}>
+                      Configuració
+                    </NavLink>
+                  </div>
                 )}
-                <NavLink to="/admin/usuaris" className={navLinkClass}>
-                  Usuaris
-                </NavLink>
-                <NavLink to="/admin/entitat" className={navLinkClass}>
-                  Configuració
-                </NavLink>
-              </>
+              </div>
             )}
           </>
         )}

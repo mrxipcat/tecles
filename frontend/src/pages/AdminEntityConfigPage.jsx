@@ -99,7 +99,7 @@ export default function AdminEntityConfigPage() {
             checked={entity.is_multiroom}
             onChange={(e) => handleChange("is_multiroom", e.target.checked)}
           />
-          Multi-{entity.room_label_singular}
+          Mode multigrup
         </label>
         {/* TODO(sprint3): els límits max_reservations_per_* encara no s'apliquen a la lògica de reserves. */}
         <Button type="submit" icon={SaveIcon} variant="primary">

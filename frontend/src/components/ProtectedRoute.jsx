@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function ProtectedRoute({
   children,
   requireAdmin = false,
-  blockAdmin = false,
   requireSuperadmin = false,
 }) {
   const { isAuthenticated, isAdmin, isSuperadmin, mustChangePassword } = useAuth();
@@ -23,9 +22,6 @@ export default function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-  if (blockAdmin && isAdmin) {
     return <Navigate to="/" replace />;
   }
   return children;

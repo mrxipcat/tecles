@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
-import { CalendarXIcon, SaveIcon } from "../components/icons.jsx";
+import { CalendarPlusIcon, CalendarXIcon, SaveIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { downloadReservationIcs } from "../utils/ics.js";
 
 const STATUS_LABELS = {
   pending: "Pendent",
   confirmed: "Confirmada",
   rejected: "Rebutjada",
   cancelled: "Cancel·lada",
+  cancelled_by_admin: "Cancel·lada per l'organitzador",
 };
 
 const DOWNLOADABLE_STATUSES = ["pending", "confirmed"];
@@ -99,7 +101,7 @@ export default function MyReservationsPage() {
             <th>Horari</th>
             <th>Estat</th>
             <th>Sol·licitada</th>
-            <th>Confirmada el</th>
+            <th>Confirmada</th>
             <th></th>
           </tr>
         </thead>
@@ -120,11 +122,21 @@ export default function MyReservationsPage() {
               <td>{new Date(reservation.created_at).toLocaleString()}</td>
               <td>{reservation.confirmed_at ? new Date(reservation.confirmed_at).toLocaleString() : ""}</td>
               <td>
-                {(reservation.status === "pending" || reservation.status === "confirmed") && (
-                  <Button icon={CalendarXIcon} variant="danger" onClick={() => handleCancel(reservation)}>
-                    Cancel·la la reserva
-                  </Button>
-                )}
+                <div className="table-actions">
+                  {reservation.status === "confirmed" && (
+                    <Button
+                      icon={CalendarPlusIcon}
+                      onClick={() => downloadReservationIcs(reservation, entity?.name)}
+                    >
+                      Afegeix al calendari
+                    </Button>
+                  )}
+                  {(reservation.status === "pending" || reservation.status === "confirmed") && (
+                    <Button icon={CalendarXIcon} variant="danger" onClick={() => handleCancel(reservation)}>
+                      Cancel·la la reserva
+                    </Button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

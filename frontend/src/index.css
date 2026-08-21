@@ -61,6 +61,46 @@ body {
   background: #fff;
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.nav-dropdown-toggle svg {
+  width: 12px;
+  height: 12px;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 11rem;
+  padding: 0.35rem;
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  z-index: 200;
+}
+
+.nav-dropdown-menu .nav-link {
+  width: 100%;
+}
+
 .navbar-user {
   display: flex;
   align-items: center;
@@ -78,45 +118,69 @@ body {
 }
 
 .session-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.6rem;
-  align-items: start;
-}
-
-.session-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 66%;
+  margin: 0 auto;
   background: white;
   border: 1px solid #e2e2e2;
   border-radius: 8px;
-  padding: 0.55rem 0.75rem;
+  overflow: hidden;
 }
 
-.session-card-header {
+.session-card {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #e2e2e2;
+  border-radius: 0;
+}
+
+.session-list .session-card:last-child {
+  border-bottom: none;
+}
+
+.session-card-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 0.75rem;
 }
 
-.session-card-heading {
+.session-card-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.session-card-heading h3 {
+.session-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.session-card-line1 {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.2;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-card-line2 {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+
+.session-card-description {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #374151;
 }
 
 .session-card-date {
   font-size: 0.78rem;
-}
-
-.session-card-description {
-  font-size: 0.85rem;
-  margin: 0.35rem 0 0;
 }
 
 .session-card-footer {
@@ -169,6 +233,22 @@ body {
 .week-event-block.is-mine {
   background: #e5f0fb;
   border-color: #b8d4ef;
+}
+
+.my-reservations-table {
+  font-size: 0.85rem;
+}
+
+.my-reservations-table th:nth-child(2),
+.my-reservations-table td:nth-child(2),
+.my-reservations-table th:nth-child(3),
+.my-reservations-table td:nth-child(3),
+.my-reservations-table th:nth-child(5),
+.my-reservations-table td:nth-child(5),
+.my-reservations-table th:nth-child(6),
+.my-reservations-table td:nth-child(6) {
+  white-space: nowrap;
+  width: 1%;
 }
 
 .my-reservations-table tr.is-mine td {
@@ -622,6 +702,10 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.my-reservations-table .table-actions {
+  justify-content: flex-end;
+}
+
 .navbar-user .btn-neutral {
   border-color: rgba(255, 255, 255, 0.35);
   color: #fff;
@@ -669,4 +753,76 @@ button:disabled {
 
 .inline-form label {
   margin-bottom: 0;
+}
+
+.richtext-editor {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.richtext-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  background: #f5f6f8;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.richtext-toolbar button {
+  min-width: 1.75rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.85rem;
+}
+
+.richtext-toolbar button:hover {
+  background: #e8e9ec;
+  border-color: #d0d0d0;
+}
+
+.richtext-editable {
+  min-height: 5rem;
+  padding: 0.5rem;
+  outline: none;
+}
+
+.richtext-editable:empty::before {
+  content: attr(data-placeholder);
+  color: #9aa0a6;
+}
+
+.rich-text-content {
+  font-size: 0.85rem;
+}
+
+.rich-text-content p {
+  margin: 0 0 0.5rem;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.rich-text-content a {
+  color: #1d4ed8;
+}
+
+.room-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.room-checkbox-list label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.35rem !important;
+  margin-bottom: 0 !important;
+  font-weight: normal;
 }

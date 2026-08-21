@@ -11,10 +11,6 @@ export default function AdminRoomsPage() {
   const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState(null);
   const [error, setError] = useState(null);
-  const roomSingular = entity?.room_label_singular ?? "Sala";
-  const roomPlural = entity?.room_label_plural ?? "Sales";
-  const roomPluralLower = roomPlural.toLowerCase();
-  const roomSingularLower = roomSingular.toLowerCase();
 
   async function load() {
     const { data } = await client.get("/rooms", { params: { entity_id: user.entity_id } });
@@ -48,7 +44,7 @@ export default function AdminRoomsPage() {
       setForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || `No s'ha pogut desar ${roomSingularLower}.`);
+      setError(err.response?.data?.detail || "No s'ha pogut desar el grup.");
     }
   }
 
@@ -58,15 +54,15 @@ export default function AdminRoomsPage() {
       await client.delete(`/rooms/${roomId}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || `No s'ha pogut eliminar ${roomSingularLower}.`);
+      setError(err.response?.data?.detail || "No s'ha pogut eliminar el grup.");
     }
   }
 
   if (entity && !entity.is_multiroom) {
     return (
       <div className="page">
-        <h1>{roomPlural}</h1>
-        <p>Activa el mode multisala a la configuració de l'entitat per gestionar {roomPluralLower}.</p>
+        <h1>Grups</h1>
+        <p>Activa el mode multisala a la configuració de l'entitat per gestionar grups.</p>
       </div>
     );
   }
@@ -74,10 +70,10 @@ export default function AdminRoomsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Administració de {roomPluralLower}</h1>
+        <h1>Administració de grups</h1>
         {!form && (
           <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
-            Nova {roomSingularLower}
+            Nou grup
           </Button>
         )}
       </div>
@@ -86,7 +82,7 @@ export default function AdminRoomsPage() {
 
       {form && (
         <form className="admin-form" onSubmit={handleSubmit}>
-          <h2>{form.id ? `Editar ${roomSingularLower}` : `Nova ${roomSingularLower}`}</h2>
+          <h2>{form.id ? "Editar grup" : "Nou grup"}</h2>
           <label>
             Nom
             <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} required />
@@ -127,7 +123,7 @@ export default function AdminRoomsPage() {
           ))}
           {rooms.length === 0 && (
             <tr>
-              <td colSpan={2}>No hi ha {roomPluralLower} configurades.</td>
+              <td colSpan={2}>No hi ha grups configurats.</td>
             </tr>
           )}
         </tbody>

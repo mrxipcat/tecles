@@ -1,3 +1,5 @@
+from datetime import datetime as datetime_, time as time_, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session as DbSession
 
@@ -13,9 +15,12 @@ from app.models import (
     VisibilityMode,
     compose_display_title,
 )
-from app.schemas import SlotSessionCreate, SlotSessionRead, SlotSessionUpdate
+from app.sanitize import sanitize_rich_text
+from app.schemas import SlotSessionCreate, SlotSessionPackCreate, SlotSessionRead, SlotSessionUpdate
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
+
+MAX_PACK_SESSIONS = 500
 
 
 def _occupied_count(session_id: int, db: DbSession) -> int:
@@ -65,7 +70,7 @@ def _serialize_session(session: SlotSession, current_user: User | None, db: DbSe
             .count()
         )
 
-    if current_user is not None and current_user.role != UserRole.ADMIN:
+    if current_user is not None:
         my_reservation = (
             db.query(Reservation)
             .filter(
@@ -79,11 +84,34 @@ def _serialize_session(session: SlotSession, current_user: User | None, db: DbSe
             data.my_reservation_id = my_reservation.id
             data.my_reservation_status = my_reservation.status
 
-    if current_user is not None and current_user.assigned_room_id is not None:
-        # Restringit a una sola sala: no cal repetir-ne el nom al títol.
+    if current_user is not None and len(current_user.visible_rooms) == 1:
+        # Restringit a un sol grup: no cal repetir-ne el nom al títol.
         data.display_title = compose_display_title(session.title, session.room_name, False)
 
     return data
+
+
+def _parse_start_time(raw: str) -> time_:
+    parts = raw.strip().split(":")
+    if len(parts) != 2 or not all(p.isdigit() for p in parts):
+        raise HTTPException(status_code=400, detail=f"Hora no vàlida: «{raw}» (format esperat H:MM)")
+    hour, minute = int(parts[0]), int(parts[1])
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        raise HTTPException(status_code=400, detail=f"Hora no vàlida: «{raw}»")
+    return time_(hour, minute)
+
+
+def _resolve_session_room(admin: User, room_id: int | None, db: DbSession) -> int:
+    if admin.entity.is_multiroom:
+        if room_id is None:
+            raise HTTPException(status_code=400, detail="Cal indicar un grup")
+        room = db.get(Room, room_id)
+        if not room or room.entity_id != admin.entity_id:
+            raise HTTPException(status_code=400, detail="Grup no vàlid")
+        return room.id
+
+    default_room = db.query(Room).filter(Room.entity_id == admin.entity_id).order_by(Room.id).first()
+    return default_room.id
 
 
 @router.get("", response_model=list[SlotSessionRead])
@@ -98,9 +126,12 @@ def list_sessions(
     if (
         current_user is not None
         and current_user.role == UserRole.USER
-        and current_user.assigned_room_id is not None
+        and current_user.entity is not None
+        and current_user.entity.is_multiroom
     ):
-        query = query.filter(SlotSession.room_id == current_user.assigned_room_id)
+        visible_room_ids = current_user.visible_room_ids
+        if visible_room_ids:
+            query = query.filter(SlotSession.room_id.in_(visible_room_ids))
     sessions = query.order_by(SlotSession.date, SlotSession.start_time).all()
 
     if current_user is not None and current_user.role == UserRole.USER:
@@ -139,26 +170,79 @@ def create_session(
     if payload.end_time <= payload.start_time:
         raise HTTPException(status_code=400, detail="L'hora de finalització ha de ser posterior a l'hora d'inici")
 
-    if admin.entity.is_multiroom:
-        if payload.room_id is None:
-            raise HTTPException(
-                status_code=400, detail=f"Cal indicar {admin.entity.room_label_singular.lower()}"
-            )
-        room = db.get(Room, payload.room_id)
-        if not room or room.entity_id != admin.entity_id:
-            raise HTTPException(status_code=400, detail=f"{admin.entity.room_label_singular} no vàlida")
-        room_id = room.id
-    else:
-        default_room = (
-            db.query(Room).filter(Room.entity_id == admin.entity_id).order_by(Room.id).first()
-        )
-        room_id = default_room.id
+    room_id = _resolve_session_room(admin, payload.room_id, db)
 
-    session = SlotSession(**payload.model_dump(exclude={"room_id"}), room_id=room_id)
+    data = payload.model_dump(exclude={"room_id"})
+    data["description"] = sanitize_rich_text(data.get("description"))
+    session = SlotSession(**data, room_id=room_id)
     db.add(session)
     db.commit()
     db.refresh(session)
     return session
+
+
+@router.post("/pack", response_model=list[SlotSessionRead], status_code=201)
+def create_session_pack(
+    payload: SlotSessionPackCreate,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    if payload.end_date < payload.start_date:
+        raise HTTPException(status_code=400, detail="La data final ha de ser posterior o igual a la data d'inici")
+    if payload.duration_hours <= 0:
+        raise HTTPException(status_code=400, detail="La durada ha de ser més gran que 0")
+    if payload.capacity < 1:
+        raise HTTPException(status_code=400, detail="Les places han de ser almenys 1")
+    if not payload.start_times:
+        raise HTTPException(status_code=400, detail="Cal indicar almenys una hora d'inici")
+
+    room_id = _resolve_session_room(admin, payload.room_id, db)
+    duration = timedelta(hours=payload.duration_hours)
+    start_times = [_parse_start_time(raw) for raw in payload.start_times]
+
+    entries = []
+    current_date = payload.start_date
+    while current_date <= payload.end_date:
+        for start_time in start_times:
+            end_dt = datetime_.combine(current_date, start_time) + duration
+            if end_dt.date() != current_date:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"La sessió de les {start_time.strftime('%H:%M')} del "
+                        f"{current_date.isoformat()} no pot acabar l'endemà"
+                    ),
+                )
+            entries.append((current_date, start_time, end_dt.time()))
+        current_date += timedelta(days=1)
+
+    if len(entries) > MAX_PACK_SESSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Massa sessions per crear en un sol pack (màxim {MAX_PACK_SESSIONS}); "
+                "redueix el rang de dates o el nombre d'hores d'inici"
+            ),
+        )
+
+    title = payload.title or None
+    sessions = [
+        SlotSession(
+            entity_id=admin.entity_id,
+            room_id=room_id,
+            title=title,
+            date=entry_date,
+            start_time=start_time,
+            end_time=end_time,
+            capacity=payload.capacity,
+        )
+        for entry_date, start_time, end_time in entries
+    ]
+    db.add_all(sessions)
+    db.commit()
+    for session in sessions:
+        db.refresh(session)
+    return sessions
 
 
 @router.patch("/{session_id}", response_model=SlotSessionRead)
@@ -181,16 +265,19 @@ def update_session(
     if effective_end <= effective_start:
         raise HTTPException(status_code=400, detail="L'hora de finalització ha de ser posterior a l'hora d'inici")
 
+    if "description" in fields:
+        fields["description"] = sanitize_rich_text(fields["description"])
+
     room_id = fields.pop("room_id", None)
     if room_id is not None:
         if not admin.entity.is_multiroom:
             raise HTTPException(
                 status_code=400,
-                detail=f"Activa el mode multisala per assignar {admin.entity.room_label_plural.lower()}",
+                detail="Activa el mode multisala per assignar grups",
             )
         room = db.get(Room, room_id)
         if not room or room.entity_id != admin.entity_id:
-            raise HTTPException(status_code=400, detail=f"{admin.entity.room_label_singular} no vàlida")
+            raise HTTPException(status_code=400, detail="Grup no vàlid")
         session.room_id = room.id
 
     for field, value in fields.items():

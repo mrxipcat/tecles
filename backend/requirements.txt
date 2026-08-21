@@ -4,6 +4,7 @@ sqlalchemy>=2.0
 pydantic>=2.0
 pydantic-settings>=2.0
 python-dotenv>=1.0
+bleach>=6.1
 
 # Desplegament a Azure Functions (Managed Functions d'Azure Static Web Apps)
 azure-functions>=1.21

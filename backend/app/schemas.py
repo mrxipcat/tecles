@@ -13,8 +13,6 @@ class EntityBase(BaseModel):
     code: str
     slot_label_singular: str = "Sessió"
     slot_label_plural: str = "Sessions"
-    room_label_singular: str = "Sala"
-    room_label_plural: str = "Sales"
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -33,8 +31,6 @@ class EntityUpdate(BaseModel):
     code: str | None = None
     slot_label_singular: str | None = None
     slot_label_plural: str | None = None
-    room_label_singular: str | None = None
-    room_label_plural: str | None = None
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -45,7 +41,7 @@ class EntityUpdate(BaseModel):
 
 
 class EntitySelfUpdate(BaseModel):
-    # Sense name/slot_label_*/room_label_*: només un superadministrador els pot canviar.
+    # Sense name/slot_label_*: només un superadministrador els pot canviar.
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -84,8 +80,8 @@ class UserRead(UserBase):
     id: int
     entity_id: int | None
     must_change_password: bool
-    assigned_room_id: int | None = None
-    assigned_room_name: str | None = None
+    visible_room_ids: list[int] = []
+    visible_room_names: list[str] = []
     created_at: datetime
 
 
@@ -94,13 +90,13 @@ class UserCreate(BaseModel):
     full_name: str | None = None
     role: UserRole = UserRole.USER
     initial_password: str
-    assigned_room_id: int | None = None
+    visible_room_ids: list[int] = []
 
 
 class UserUpdate(BaseModel):
     full_name: str | None = None
     role: UserRole | None = None
-    assigned_room_id: int | None = None
+    visible_room_ids: list[int] | None = None
 
 
 class PasswordResetRequest(BaseModel):
@@ -175,6 +171,18 @@ class SlotSessionBase(BaseModel):
 class SlotSessionCreate(SlotSessionBase):
     entity_id: int
     room_id: int | None = None
+
+
+class SlotSessionPackCreate(BaseModel):
+    title: str | None = None
+    room_id: int | None = None
+    capacity: int = 1
+    start_date: date_
+    end_date: date_
+    duration_hours: float
+    # Llista de cadenes ("8:00", "08:00"...) en lloc de `time`: pydantic exigeix hores
+    # amb zero a l'esquerra ("08:00") i volem acceptar totes dues notacions.
+    start_times: list[str]
 
 
 class SlotSessionUpdate(BaseModel):

@@ -2,6 +2,8 @@ import { Fragment, useEffect, useState } from "react";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import { ChevronDownIcon, PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
+import RichTextEditor from "../components/RichTextEditor.jsx";
+import SessionPackForm from "../components/SessionPackForm.jsx";
 import SessionReservationsPanel from "../components/SessionReservationsPanel.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -21,12 +23,13 @@ export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState(null);
+  const [packOpen, setPackOpen] = useState(false);
+  const [packMessage, setPackMessage] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [error, setError] = useState(null);
 
   const singular = entity?.slot_label_singular ?? "Sessió";
   const plural = entity?.slot_label_plural ?? "Sessions";
-  const roomSingular = entity?.room_label_singular ?? "Sala";
   const isMultiroom = Boolean(entity?.is_multiroom);
 
   async function load() {
@@ -56,11 +59,26 @@ export default function AdminSessionsPage() {
 
   function handleNew() {
     setError(null);
+    setPackOpen(false);
     setForm(EMPTY_FORM);
+  }
+
+  function handleOpenPack() {
+    setError(null);
+    setForm(null);
+    setPackMessage(null);
+    setPackOpen(true);
+  }
+
+  function handlePackCreated(count) {
+    setPackOpen(false);
+    setPackMessage(`S'han creat ${count} sessions.`);
+    load();
   }
 
   function handleEdit(session) {
     setError(null);
+    setPackOpen(false);
     setForm({
       id: session.id,
       title: session.title || "",
@@ -118,12 +136,28 @@ export default function AdminSessionsPage() {
     <div className="page">
       <div className="page-header">
         <h1>Administració de {plural}</h1>
-        {!form && (
-          <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
-            Nova {singular}
-          </Button>
+        {!form && !packOpen && (
+          <div className="table-actions">
+            <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
+              Nova {singular}
+            </Button>
+            <Button icon={PlusIcon} onClick={handleOpenPack}>
+              Nou pack de sessions
+            </Button>
+          </div>
         )}
       </div>
+
+      {packMessage && <p className="info">{packMessage}</p>}
+
+      {packOpen && (
+        <SessionPackForm
+          isMultiroom={isMultiroom}
+          rooms={rooms}
+          onCreated={handlePackCreated}
+          onCancel={() => setPackOpen(false)}
+        />
+      )}
 
       {form && (
         <form className="admin-form" onSubmit={handleSubmit}>
@@ -134,10 +168,10 @@ export default function AdminSessionsPage() {
           </label>
           {isMultiroom && (
             <label>
-              {roomSingular}
+              Grup
               <select value={form.room_id} onChange={(e) => handleChange("room_id", e.target.value)} required>
                 <option value="" disabled>
-                  Selecciona {roomSingular.toLowerCase()}
+                  Selecciona un grup
                 </option>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -149,7 +183,11 @@ export default function AdminSessionsPage() {
           )}
           <label>
             Descripció
-            <textarea value={form.description} onChange={(e) => handleChange("description", e.target.value)} />
+            <RichTextEditor
+              value={form.description}
+              onChange={(html) => handleChange("description", html)}
+              placeholder="Descripció (opcional)"
+            />
           </label>
           <label>
             Data
@@ -201,7 +239,7 @@ export default function AdminSessionsPage() {
         <thead>
           <tr>
             <th>Títol</th>
-            {isMultiroom && <th>{roomSingular}</th>}
+            {isMultiroom && <th>Grup</th>}
             <th>Data</th>
             <th>Horari</th>
             <th>Places</th>

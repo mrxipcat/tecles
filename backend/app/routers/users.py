@@ -19,10 +19,13 @@ def _get_own_entity_user(user_id: int, admin: User, db: DbSession) -> User:
     return user
 
 
-def _validate_room(room_id: int, admin: User, db: DbSession) -> None:
-    room = db.get(Room, room_id)
-    if not room or room.entity_id != admin.entity_id:
-        raise HTTPException(status_code=400, detail=f"{admin.entity.room_label_singular} no vàlida")
+def _resolve_rooms(room_ids: list[int], admin: User, db: DbSession) -> list[Room]:
+    if not room_ids:
+        return []
+    rooms = db.query(Room).filter(Room.id.in_(room_ids), Room.entity_id == admin.entity_id).all()
+    if len(rooms) != len(set(room_ids)):
+        raise HTTPException(status_code=400, detail="Grup no vàlid")
+    return rooms
 
 
 @router.get("", response_model=list[UserRead])
@@ -44,8 +47,7 @@ def create_user(
     if existing:
         raise HTTPException(status_code=400, detail="Ja existeix un usuari amb aquest nom d'usuari")
 
-    if payload.assigned_room_id is not None:
-        _validate_room(payload.assigned_room_id, admin, db)
+    rooms = _resolve_rooms(payload.visible_room_ids, admin, db)
 
     user = User(
         entity_id=admin.entity_id,
@@ -54,7 +56,7 @@ def create_user(
         role=payload.role,
         password_hash=hash_password(payload.initial_password),
         must_change_password=True,
-        assigned_room_id=payload.assigned_room_id,
+        visible_rooms=rooms,
     )
     db.add(user)
     db.commit()
@@ -71,8 +73,9 @@ def update_user(
 ):
     user = _get_own_entity_user(user_id, admin, db)
     fields = payload.model_dump(exclude_unset=True)
-    if fields.get("assigned_room_id") is not None:
-        _validate_room(fields["assigned_room_id"], admin, db)
+    room_ids = fields.pop("visible_room_ids", None)
+    if room_ids is not None:
+        user.visible_rooms = _resolve_rooms(room_ids, admin, db)
     for field, value in fields.items():
         setattr(user, field, value)
     db.commit()

@@ -10,7 +10,7 @@ const EMPTY_FORM = {
   full_name: "",
   role: "user",
   initial_password: "",
-  assigned_room_id: "",
+  visible_room_ids: [],
 };
 
 export default function AdminUsersPage() {
@@ -23,8 +23,6 @@ export default function AdminUsersPage() {
   const [error, setError] = useState(null);
   const isMultiroom = Boolean(entity?.is_multiroom);
   const columnCount = isMultiroom ? 6 : 5;
-  const roomSingular = entity?.room_label_singular ?? "Sala";
-  const roomPlural = entity?.room_label_plural ?? "Sales";
 
   async function load() {
     const { data } = await client.get("/users");
@@ -46,6 +44,16 @@ export default function AdminUsersPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function toggleFormRoom(roomId) {
+    setForm((prev) => {
+      const current = prev.visible_room_ids;
+      const next = current.includes(roomId)
+        ? current.filter((id) => id !== roomId)
+        : [...current, roomId];
+      return { ...prev, visible_room_ids: next };
+    });
+  }
+
   function handleNew() {
     setError(null);
     setForm(EMPTY_FORM);
@@ -58,20 +66,19 @@ export default function AdminUsersPage() {
       username: target.username,
       full_name: target.full_name || "",
       role: target.role,
-      assigned_room_id: target.assigned_room_id ?? "",
+      visible_room_ids: target.visible_room_ids || [],
     });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
-    const assignedRoomId = form.assigned_room_id ? Number(form.assigned_room_id) : null;
     try {
       if (form.id) {
         await client.patch(`/users/${form.id}`, {
           full_name: form.full_name,
           role: form.role,
-          assigned_room_id: assignedRoomId,
+          visible_room_ids: form.visible_room_ids,
         });
       } else {
         await client.post("/users", {
@@ -79,7 +86,7 @@ export default function AdminUsersPage() {
           full_name: form.full_name,
           role: form.role,
           initial_password: form.initial_password,
-          assigned_room_id: assignedRoomId,
+          visible_room_ids: form.visible_room_ids,
         });
       }
       setForm(null);
@@ -156,18 +163,19 @@ export default function AdminUsersPage() {
           </label>
           {isMultiroom && form.role === "user" && (
             <label>
-              {roomSingular} assignada (opcional)
-              <select
-                value={form.assigned_room_id}
-                onChange={(e) => handleChange("assigned_room_id", e.target.value)}
-              >
-                <option value="">Totes les {roomPlural.toLowerCase()}</option>
+              Grups visibles (cap seleccionat = tots)
+              <div className="room-checkbox-list">
                 {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
+                  <label key={room.id}>
+                    <input
+                      type="checkbox"
+                      checked={form.visible_room_ids.includes(room.id)}
+                      onChange={() => toggleFormRoom(room.id)}
+                    />
                     {room.name}
-                  </option>
+                  </label>
                 ))}
-              </select>
+              </div>
             </label>
           )}
           {!form.id && (
@@ -199,7 +207,7 @@ export default function AdminUsersPage() {
             <th>Usuari</th>
             <th>Nom complet</th>
             <th>Rol</th>
-            {isMultiroom && <th>{roomSingular} assignada</th>}
+            {isMultiroom && <th>Grups visibles</th>}
             <th>Ha de canviar contrasenya</th>
             <th></th>
           </tr>
@@ -211,7 +219,11 @@ export default function AdminUsersPage() {
                 <td>{u.username}</td>
                 <td>{u.full_name}</td>
                 <td>{u.role === "admin" ? "Administrador" : "Usuari"}</td>
-                {isMultiroom && <td>{u.role === "user" ? u.assigned_room_name || "Totes" : "—"}</td>}
+                {isMultiroom && (
+                  <td>
+                    {u.role === "user" ? u.visible_room_names.join(", ") || "Totes" : "—"}
+                  </td>
+                )}
                 <td>{u.must_change_password ? "Sí" : "No"}</td>
                 <td>
                   <div className="table-actions">

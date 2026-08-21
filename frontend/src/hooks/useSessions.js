@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import client from "../api/client.js";
 
-export function useSessions(entityId) {
+export function useSessions(entityId, visibleRoomIds) {
   const [allSessions, setAllSessions] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [activeRoomIds, setActiveRoomIds] = useState(null);
@@ -20,10 +20,16 @@ export function useSessions(entityId) {
   useEffect(() => {
     if (!entityId) return;
     client.get("/rooms", { params: { entity_id: entityId } }).then(({ data }) => {
-      setRooms(data);
-      setActiveRoomIds(new Set(data.map((room) => room.id)));
+      // Cap grup assignat (visibleRoomIds buit/null) = sense restricció, veu tots.
+      const visible =
+        visibleRoomIds && visibleRoomIds.length > 0
+          ? data.filter((room) => visibleRoomIds.includes(room.id))
+          : data;
+      setRooms(visible);
+      setActiveRoomIds(new Set(visible.map((room) => room.id)));
     });
-  }, [entityId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityId, JSON.stringify(visibleRoomIds)]);
 
   function toggleRoom(roomId) {
     setActiveRoomIds((prev) => {
