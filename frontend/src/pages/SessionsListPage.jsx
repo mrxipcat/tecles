@@ -1,3 +1,5 @@
+import Button from "../components/Button.jsx";
+import { RefreshIcon } from "../components/icons.jsx";
 import RoomFilterBar from "../components/RoomFilterBar.jsx";
 import SessionCard from "../components/SessionCard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -5,7 +7,7 @@ import { useSessions } from "../hooks/useSessions.js";
 
 export default function SessionsListPage() {
   const { user, entity, isAdmin } = useAuth();
-  const { sessions, rooms, activeRoomIds, toggleRoom, message, reserve, cancel } = useSessions(
+  const { sessions, rooms, activeRoomIds, toggleRoom, message, reload, reserve, cancel } = useSessions(
     user.entity_id,
     isAdmin ? null : user.visible_room_ids
   );
@@ -14,7 +16,12 @@ export default function SessionsListPage() {
 
   return (
     <div className="page">
-      <h1>{plural} disponibles</h1>
+      <div className="page-header">
+        <h1>{plural} disponibles</h1>
+        <Button icon={RefreshIcon} onClick={reload}>
+          Actualitza
+        </Button>
+      </div>
       {showRoomFilter && (
         <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />
       )}

@@ -53,6 +53,7 @@ def create_user(
         entity_id=admin.entity_id,
         username=payload.username,
         full_name=payload.full_name,
+        email=payload.email,
         role=payload.role,
         password_hash=hash_password(payload.initial_password),
         must_change_password=True,

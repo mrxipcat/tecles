@@ -52,6 +52,33 @@ def _migrate_legacy_assigned_room() -> None:
         )
 
 
+def _add_missing_columns() -> None:
+    """Afegeix columnes noves a taules que ja existien abans d'incorporar-les al
+    model (`create_all` no altera taules existents, només en crea de noves)."""
+    inspector = inspect(engine)
+    dialect = engine.dialect.name
+    bool_type = "BIT" if dialect == "mssql" else "BOOLEAN"
+    text_type = "NVARCHAR(MAX)" if dialect == "mssql" else "TEXT"
+    specs = [
+        ("sessions", "is_active", f"{bool_type} NOT NULL DEFAULT 1"),
+        ("users", "email", "VARCHAR(255) NULL"),
+        ("entities", "smtp_host", "VARCHAR(255) NULL"),
+        ("entities", "smtp_port", "INTEGER NULL"),
+        ("entities", "smtp_username", "VARCHAR(255) NULL"),
+        ("entities", "smtp_password", "VARCHAR(255) NULL"),
+        ("entities", "smtp_from_email", "VARCHAR(255) NULL"),
+        ("entities", "smtp_use_tls", f"{bool_type} NOT NULL DEFAULT 1"),
+        ("entities", "email_signature", f"{text_type} NULL"),
+    ]
+    with engine.begin() as conn:
+        for table, column, ddl in specs:
+            if table not in inspector.get_table_names():
+                continue
+            if column in {col["name"] for col in inspector.get_columns(table)}:
+                continue
+            conn.execute(text(f"ALTER TABLE {table} ADD {column} {ddl}"))
+
+
 def _retry_on_transient_db_error(fn, attempts: int = 5, delay_seconds: float = 5.0) -> None:
     """Azure SQL Serverless posa la base de dades en pausa quan no hi ha activitat; la
     primera connexió després d'una pausa pot trigar mig minut a "despertar-la" i mentrestant
@@ -79,6 +106,7 @@ def ensure_db_ready() -> None:
     """
     _retry_on_transient_db_error(lambda: Base.metadata.create_all(bind=engine))
     _retry_on_transient_db_error(_migrate_legacy_assigned_room)
+    _retry_on_transient_db_error(_add_missing_columns)
 
     def _seed() -> None:
         db = SessionLocal()

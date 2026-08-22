@@ -16,7 +16,14 @@ from app.models import (
     compose_display_title,
 )
 from app.sanitize import sanitize_rich_text
-from app.schemas import SlotSessionCreate, SlotSessionPackCreate, SlotSessionRead, SlotSessionUpdate
+from app.schemas import (
+    SlotSessionBulkActiveUpdate,
+    SlotSessionBulkDelete,
+    SlotSessionCreate,
+    SlotSessionPackCreate,
+    SlotSessionRead,
+    SlotSessionUpdate,
+)
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -51,14 +58,16 @@ def _serialize_session(session: SlotSession, current_user: User | None, db: DbSe
     occupied = _occupied_count(session.id, db)
     available_places = max(session.capacity - occupied, 0)
 
-    show = current_user is not None and (
-        current_user.role == UserRole.ADMIN or session.entity.show_available_places
-    )
+    is_admin = current_user is not None and current_user.role == UserRole.ADMIN
+    show = is_admin or session.entity.show_available_places
 
     data = SlotSessionRead.model_validate(session)
+    data.is_available = available_places > 0
     data.available_places = available_places if show else None
+    if not show:
+        data.capacity = None
 
-    if current_user is not None and current_user.role == UserRole.ADMIN:
+    if is_admin:
         data.pending_count = (
             db.query(Reservation)
             .filter(Reservation.session_id == session.id, Reservation.status == ReservationStatus.PENDING)
@@ -120,9 +129,13 @@ def list_sessions(
     db: DbSession = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),
 ):
+    is_admin = current_user is not None and current_user.role == UserRole.ADMIN
+
     query = db.query(SlotSession)
     if entity_id is not None:
         query = query.filter(SlotSession.entity_id == entity_id)
+    if not is_admin:
+        query = query.filter(SlotSession.is_active.is_(True))
     if (
         current_user is not None
         and current_user.role == UserRole.USER
@@ -153,7 +166,8 @@ def get_session(
     current_user: User | None = Depends(get_current_user_optional),
 ):
     session = db.get(SlotSession, session_id)
-    if not session:
+    is_admin = current_user is not None and current_user.role == UserRole.ADMIN
+    if not session or (not session.is_active and not is_admin):
         raise HTTPException(status_code=404, detail="Sessió no trobada")
     return _serialize_session(session, current_user, db)
 
@@ -235,6 +249,7 @@ def create_session_pack(
             start_time=start_time,
             end_time=end_time,
             capacity=payload.capacity,
+            is_active=payload.is_active,
         )
         for entry_date, start_time, end_time in entries
     ]
@@ -243,6 +258,46 @@ def create_session_pack(
     for session in sessions:
         db.refresh(session)
     return sessions
+
+
+def _resolve_owned_sessions(session_ids: list[int], admin: User, db: DbSession) -> list[SlotSession]:
+    sessions = db.query(SlotSession).filter(SlotSession.id.in_(session_ids)).all()
+    found_ids = {session.id for session in sessions}
+    missing_ids = set(session_ids) - found_ids
+    if missing_ids:
+        raise HTTPException(status_code=404, detail=f"Sessió no trobada: {sorted(missing_ids)}")
+    for session in sessions:
+        if session.entity_id != admin.entity_id:
+            raise HTTPException(status_code=403, detail="No pots gestionar sessions d'una altra entitat")
+    return sessions
+
+
+@router.patch("/bulk-active", response_model=list[SlotSessionRead])
+def bulk_update_active(
+    payload: SlotSessionBulkActiveUpdate,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    sessions = _resolve_owned_sessions(payload.session_ids, admin, db)
+
+    for session in sessions:
+        session.is_active = payload.is_active
+    db.commit()
+    for session in sessions:
+        db.refresh(session)
+    return [_serialize_session(session, admin, db) for session in sessions]
+
+
+@router.delete("/bulk", status_code=204)
+def bulk_delete_sessions(
+    payload: SlotSessionBulkDelete,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    sessions = _resolve_owned_sessions(payload.session_ids, admin, db)
+    for session in sessions:
+        db.delete(session)
+    db.commit()
 
 
 @router.patch("/{session_id}", response_model=SlotSessionRead)

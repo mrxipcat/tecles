@@ -525,6 +525,11 @@ td {
   border-bottom: 1px solid #e2e2e2;
 }
 
+tr.row-inactive td {
+  background-color: #f0f0f0;
+  color: #888;
+}
+
 .alias-table {
   width: auto;
   margin: 0;
@@ -597,13 +602,6 @@ form label {
   color: #c0392b;
 }
 
-.my-reservation-note {
-  font-size: 0.8rem;
-  font-style: italic;
-  color: #374151;
-  margin: 0.35rem 0 0;
-}
-
 button {
   cursor: pointer;
 }
@@ -666,6 +664,13 @@ button:disabled {
   border-color: #1d4ed8;
 }
 
+.btn-primary:disabled {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #6b7280;
+  opacity: 1;
+}
+
 .btn-danger {
   background: #fdecea;
   border-color: #f3c2bd;
@@ -700,6 +705,23 @@ button:disabled {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+}
+
+.bulk-actions-bar {
+  background: #eef6ff;
+  border: 1px solid #bcd9f7;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.bulk-actions-bar h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.bulk-actions-bar .table-actions {
+  align-items: center;
 }
 
 .my-reservations-table .table-actions {

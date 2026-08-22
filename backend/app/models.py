@@ -71,6 +71,17 @@ class Entity(Base):
     auto_confirm_reservations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_multiroom: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # Compte i servidor SMTP utilitzats per `app/email_service.py` per enviar les
+    # notificacions de reserves i el correu de prova de configuració.
+    smtp_host: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    smtp_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    smtp_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    smtp_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    smtp_from_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    smtp_use_tls: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Peu de text (HTML sanititzat) afegit a tots els correus enviats per aquesta entitat.
+    email_signature: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     users: Mapped[list["User"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
@@ -106,6 +117,7 @@ class User(Base):
     entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id"), nullable=True)
     username: Mapped[str] = mapped_column(String(100), nullable=False)
     full_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.USER)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -139,6 +151,7 @@ class SlotSession(Base):
     start_time: Mapped[time_] = mapped_column(Time, nullable=False)
     end_time: Mapped[time_] = mapped_column(Time, nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     entity: Mapped["Entity"] = relationship(back_populates="sessions")

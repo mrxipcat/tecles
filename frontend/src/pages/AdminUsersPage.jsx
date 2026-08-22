@@ -8,6 +8,7 @@ const EMPTY_FORM = {
   id: null,
   username: "",
   full_name: "",
+  email: "",
   role: "user",
   initial_password: "",
   visible_room_ids: [],
@@ -22,7 +23,7 @@ export default function AdminUsersPage() {
   const [resetPassword, setResetPassword] = useState("");
   const [error, setError] = useState(null);
   const isMultiroom = Boolean(entity?.is_multiroom);
-  const columnCount = isMultiroom ? 6 : 5;
+  const columnCount = isMultiroom ? 7 : 6;
 
   async function load() {
     const { data } = await client.get("/users");
@@ -65,6 +66,7 @@ export default function AdminUsersPage() {
       id: target.id,
       username: target.username,
       full_name: target.full_name || "",
+      email: target.email || "",
       role: target.role,
       visible_room_ids: target.visible_room_ids || [],
     });
@@ -77,6 +79,7 @@ export default function AdminUsersPage() {
       if (form.id) {
         await client.patch(`/users/${form.id}`, {
           full_name: form.full_name,
+          email: form.email || null,
           role: form.role,
           visible_room_ids: form.visible_room_ids,
         });
@@ -84,6 +87,7 @@ export default function AdminUsersPage() {
         await client.post("/users", {
           username: form.username,
           full_name: form.full_name,
+          email: form.email || null,
           role: form.role,
           initial_password: form.initial_password,
           visible_room_ids: form.visible_room_ids,
@@ -155,6 +159,14 @@ export default function AdminUsersPage() {
             <input value={form.full_name} onChange={(e) => handleChange("full_name", e.target.value)} />
           </label>
           <label>
+            Correu electrònic
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+            />
+          </label>
+          <label>
             Rol
             <select value={form.role} onChange={(e) => handleChange("role", e.target.value)}>
               <option value="user">Usuari</option>
@@ -206,6 +218,7 @@ export default function AdminUsersPage() {
           <tr>
             <th>Usuari</th>
             <th>Nom complet</th>
+            <th>Correu electrònic</th>
             <th>Rol</th>
             {isMultiroom && <th>Grups visibles</th>}
             <th>Ha de canviar contrasenya</th>
@@ -218,6 +231,7 @@ export default function AdminUsersPage() {
               <tr>
                 <td>{u.username}</td>
                 <td>{u.full_name}</td>
+                <td>{u.email || "—"}</td>
                 <td>{u.role === "admin" ? "Administrador" : "Usuari"}</td>
                 {isMultiroom && (
                   <td>

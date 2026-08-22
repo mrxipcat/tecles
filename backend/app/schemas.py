@@ -65,12 +65,49 @@ class EntityPublicRead(BaseModel):
     code: str
 
 
+# Camps SMTP fora d'`EntityBase`/`EntityRead` a propòsit: aquests es serialitzen
+# des d'endpoints sense autenticació (`GET /entities`, `GET /entities/{id}`), i
+# `smtp_password` mai s'hi pot exposar.
+class EntityEmailConfig(BaseModel):
+    smtp_host: str | None = None
+    smtp_port: int | None = None
+    smtp_username: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
+    # Buit o absent = no modificar la contrasenya ja desada.
+    smtp_password: str | None = None
+    # Peu de text (HTML) afegit a tots els correus enviats des del portal.
+    email_signature: str | None = None
+
+
+class EntityEmailConfigRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    smtp_host: str | None = None
+    smtp_port: int | None = None
+    smtp_username: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
+    smtp_password_set: bool = False
+    email_signature: str | None = None
+
+
+class EntityEmailTestRequest(BaseModel):
+    to_email: str
+
+
+class EntityEmailTestResult(BaseModel):
+    success: bool
+    detail: str
+
+
 # ---------- User ----------
 
 
 class UserBase(BaseModel):
     username: str
     full_name: str | None = None
+    email: str | None = None
     role: UserRole = UserRole.USER
 
 
@@ -88,6 +125,7 @@ class UserRead(UserBase):
 class UserCreate(BaseModel):
     username: str
     full_name: str | None = None
+    email: str | None = None
     role: UserRole = UserRole.USER
     initial_password: str
     visible_room_ids: list[int] = []
@@ -95,6 +133,7 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     full_name: str | None = None
+    email: str | None = None
     role: UserRole | None = None
     visible_room_ids: list[int] | None = None
 
@@ -166,6 +205,7 @@ class SlotSessionBase(BaseModel):
     start_time: time_
     end_time: time_
     capacity: int = 1
+    is_active: bool = True
 
 
 class SlotSessionCreate(SlotSessionBase):
@@ -177,6 +217,7 @@ class SlotSessionPackCreate(BaseModel):
     title: str | None = None
     room_id: int | None = None
     capacity: int = 1
+    is_active: bool = True
     start_date: date_
     end_date: date_
     duration_hours: float
@@ -193,6 +234,16 @@ class SlotSessionUpdate(BaseModel):
     end_time: time_ | None = None
     capacity: int | None = None
     room_id: int | None = None
+    is_active: bool | None = None
+
+
+class SlotSessionBulkActiveUpdate(BaseModel):
+    session_ids: list[int]
+    is_active: bool
+
+
+class SlotSessionBulkDelete(BaseModel):
+    session_ids: list[int]
 
 
 class SlotSessionRead(SlotSessionBase):
@@ -204,7 +255,12 @@ class SlotSessionRead(SlotSessionBase):
     room_name: str | None = None
     display_title: str
     created_at: datetime
+    # None per a usuaris no administradors quan l'entitat té
+    # `show_available_places=False` (no se'ls ha d'informar ni de la
+    # capacitat ni de l'ocupació, només de `is_available`).
+    capacity: int | None = None
     available_places: int | None = None
+    is_available: bool = True
     pending_count: int | None = None
     confirmed_count: int | None = None
     my_reservation_id: int | None = None
@@ -216,6 +272,10 @@ class SlotSessionRead(SlotSessionBase):
 
 class ReservationCreate(BaseModel):
     session_id: int
+
+
+class ReservationBulkSessionAction(BaseModel):
+    session_ids: list[int]
 
 
 class ReservationRead(BaseModel):

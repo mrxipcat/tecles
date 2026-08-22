@@ -6,12 +6,12 @@ import WeekTimelineGrid from "../components/WeekTimelineGrid.jsx";
 import SessionDetailPanel from "../components/SessionDetailPanel.jsx";
 import RoomFilterBar from "../components/RoomFilterBar.jsx";
 import Button from "../components/Button.jsx";
-import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, ColumnsIcon } from "../components/icons.jsx";
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, ColumnsIcon, RefreshIcon } from "../components/icons.jsx";
 import { buildMonthDays, buildWeekDays, formatRangeLabel } from "../utils/calendarGrid.js";
 
 export default function SessionsCalendarPage() {
   const { user, entity, isAdmin } = useAuth();
-  const { sessions, rooms, activeRoomIds, toggleRoom, message, reserve, cancel } = useSessions(
+  const { sessions, rooms, activeRoomIds, toggleRoom, message, reload, reserve, cancel } = useSessions(
     user.entity_id,
     isAdmin ? null : user.visible_room_ids
   );
@@ -45,7 +45,12 @@ export default function SessionsCalendarPage() {
 
   return (
     <div className="page">
-      <h1>Calendari de {plural.toLowerCase()}</h1>
+      <div className="page-header">
+        <h1>Calendari de {plural.toLowerCase()}</h1>
+        <Button icon={RefreshIcon} onClick={reload}>
+          Actualitza
+        </Button>
+      </div>
       {showRoomFilter && <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />}
       {message && <p className="info">{message}</p>}
       <div className="calendar-toolbar">

@@ -5,7 +5,7 @@ import { availabilityClass, availabilityText } from "../utils/availability.js";
 
 export default function SessionCard({ session, onReserve, onCancel }) {
   const [expanded, setExpanded] = useState(false);
-  const full = session.available_places === 0;
+  const full = session.is_available === false;
 
   function handleCancelClick() {
     if (window.confirm(`Vols cancel·lar la reserva de "${session.display_title}"?`)) {

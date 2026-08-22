@@ -174,3 +174,32 @@ export function CalendarXIcon(props) {
     </Icon>
   );
 }
+
+export function RefreshIcon(props) {
+  return (
+    <Icon {...props}>
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" />
+      <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" />
+    </Icon>
+  );
+}
+
+export function PowerIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M12 2v10" />
+      <path d="M18.4 6.6a9 9 0 1 1-12.77.03" />
+    </Icon>
+  );
+}
+
+export function MailIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 8.4 6.2a1.5 1.5 0 0 0 1.78 0L21 7" />
+    </Icon>
+  );
+}

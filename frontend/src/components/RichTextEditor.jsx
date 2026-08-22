@@ -32,8 +32,11 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
   }
 
   function insertLink() {
-    const url = window.prompt("URL de l'enllaç (https://...)");
-    if (!url) return;
+    const input = window.prompt("URL de l'enllaç (https://...)");
+    if (!input) return;
+    // Sense protocol (p. ex. "www.instagram.com"), el navegador el resoldria com una
+    // ruta relativa de la mateixa app en lloc d'un enllaç extern.
+    const url = /^[a-z][a-z0-9+.-]*:/i.test(input) ? input : `https://${input}`;
     editorRef.current.focus();
     document.execCommand("createLink", false, url);
     const anchors = editorRef.current.querySelectorAll(`a[href="${url}"]`);

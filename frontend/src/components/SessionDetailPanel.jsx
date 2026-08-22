@@ -16,7 +16,7 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
       </p>
     );
   }
-  const full = session.available_places === 0;
+  const full = session.is_available === false;
 
   function handleCancelClick() {
     if (window.confirm(`Vols cancel·lar la reserva de "${session.display_title}"?`)) {
@@ -36,13 +36,6 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
         {session.date} · {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
       </p>
       <RichTextContent html={session.description} />
-      {session.my_reservation_status && (
-        <p className="my-reservation-note">
-          {session.my_reservation_status === "pending"
-            ? `Sol·licitud pendent per a ${singularLower}.`
-            : `Reserva confirmada per a ${singularLower}.`}
-        </p>
-      )}
       <div className="session-card-footer">
         <span>{availabilityText(session)}</span>
         {session.my_reservation_id ? (

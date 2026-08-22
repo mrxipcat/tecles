@@ -3,7 +3,7 @@ import client from "../api/client.js";
 import Button from "./Button.jsx";
 import { CalendarXIcon, CheckIcon, XIcon } from "./icons.jsx";
 
-export default function SessionReservationsPanel({ sessionId, autoConfirm }) {
+export default function SessionReservationsPanel({ sessionId, autoConfirm, onChanged }) {
   const [reservations, setReservations] = useState([]);
 
   const load = useCallback(async () => {
@@ -17,7 +17,8 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm }) {
 
   async function decide(reservationId, status) {
     await client.patch(`/reservations/${reservationId}`, { status });
-    load();
+    await load();
+    onChanged?.();
   }
 
   async function cancelConfirmed(reservation) {
@@ -25,7 +26,8 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm }) {
       return;
     }
     await client.delete(`/reservations/${reservation.id}`);
-    load();
+    await load();
+    onChanged?.();
   }
 
   const pending = reservations.filter((r) => r.status === "pending");

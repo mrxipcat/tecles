@@ -1,8 +1,19 @@
 import { Fragment, useEffect, useState } from "react";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
-import { ChevronDownIcon, PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
+import {
+  CalendarXIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  PencilIcon,
+  PlusIcon,
+  PowerIcon,
+  SaveIcon,
+  TrashIcon,
+  XIcon,
+} from "../components/icons.jsx";
 import RichTextEditor from "../components/RichTextEditor.jsx";
+import RoomFilterBar from "../components/RoomFilterBar.jsx";
 import SessionPackForm from "../components/SessionPackForm.jsx";
 import SessionReservationsPanel from "../components/SessionReservationsPanel.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -16,16 +27,19 @@ const EMPTY_FORM = {
   end_time: "",
   capacity: 1,
   room_id: "",
+  is_active: true,
 };
 
 export default function AdminSessionsPage() {
   const { user, entity } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [activeRoomIds, setActiveRoomIds] = useState(null);
   const [form, setForm] = useState(null);
   const [packOpen, setPackOpen] = useState(false);
   const [packMessage, setPackMessage] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [error, setError] = useState(null);
 
   const singular = entity?.slot_label_singular ?? "Sessió";
@@ -44,13 +58,100 @@ export default function AdminSessionsPage() {
 
   useEffect(() => {
     if (isMultiroom) {
-      client.get("/rooms", { params: { entity_id: user.entity_id } }).then(({ data }) => setRooms(data));
+      client.get("/rooms", { params: { entity_id: user.entity_id } }).then(({ data }) => {
+        setRooms(data);
+        setActiveRoomIds(new Set(data.map((room) => room.id)));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMultiroom]);
 
+  function toggleRoom(roomId) {
+    setActiveRoomIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(roomId)) next.delete(roomId);
+      else next.add(roomId);
+      return next;
+    });
+  }
+
+  // En canviar el filtre de grups (o recarregar sessions), manté seleccionades
+  // només les sessions que continuen essent visibles.
+  useEffect(() => {
+    if (!isMultiroom || !activeRoomIds) return;
+    setSelectedIds((prev) => {
+      let changed = false;
+      const next = new Set();
+      prev.forEach((id) => {
+        const session = sessions.find((s) => s.id === id);
+        if (session && activeRoomIds.has(session.room_id)) {
+          next.add(id);
+        } else {
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [activeRoomIds, sessions, isMultiroom]);
+
   function toggleReservations(sessionId) {
     setExpandedId((prev) => (prev === sessionId ? null : sessionId));
+  }
+
+  function toggleSelected(sessionId) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sessionId)) next.delete(sessionId);
+      else next.add(sessionId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) =>
+      prev.size === visibleSessions.length ? new Set() : new Set(visibleSessions.map((s) => s.id))
+    );
+  }
+
+  async function handleToggleActive(session) {
+    await client.patch(`/sessions/${session.id}`, { is_active: !session.is_active });
+    load();
+  }
+
+  async function handleBulkSetActive(isActive) {
+    await client.patch("/sessions/bulk-active", {
+      session_ids: [...selectedIds],
+      is_active: isActive,
+    });
+    setSelectedIds(new Set());
+    load();
+  }
+
+  async function handleBulkConfirmPending() {
+    if (!window.confirm("Vols confirmar totes les reserves pendents de les sessions seleccionades?")) {
+      return;
+    }
+    await client.patch("/reservations/bulk-confirm", { session_ids: [...selectedIds] });
+    setSelectedIds(new Set());
+    load();
+  }
+
+  async function handleBulkCancelReservations() {
+    if (!window.confirm("Vols cancel·lar totes les reserves (pendents i confirmades) de les sessions seleccionades?")) {
+      return;
+    }
+    await client.patch("/reservations/bulk-cancel", { session_ids: [...selectedIds] });
+    setSelectedIds(new Set());
+    load();
+  }
+
+  async function handleBulkDelete() {
+    if (!window.confirm(`Vols esborrar les ${selectedIds.size} sessions seleccionades? Aquesta acció no es pot desfer.`)) {
+      return;
+    }
+    await client.delete("/sessions/bulk", { data: { session_ids: [...selectedIds] } });
+    setSelectedIds(new Set());
+    load();
   }
 
   function handleChange(field, value) {
@@ -88,6 +189,7 @@ export default function AdminSessionsPage() {
       end_time: session.end_time?.slice(0, 5),
       capacity: session.capacity,
       room_id: session.room_id ?? "",
+      is_active: session.is_active,
     });
   }
 
@@ -107,6 +209,7 @@ export default function AdminSessionsPage() {
       start_time: form.start_time,
       end_time: form.end_time,
       capacity: Number(form.capacity),
+      is_active: form.is_active,
     };
     if (isMultiroom) {
       payload.room_id = Number(form.room_id);
@@ -130,7 +233,9 @@ export default function AdminSessionsPage() {
   }
 
   const showPending = entity && !entity.auto_confirm_reservations;
-  const columnCount = 6 + (isMultiroom ? 1 : 0) + (showPending ? 1 : 0);
+  const columnCount = 8 + (isMultiroom ? 1 : 0) + (showPending ? 1 : 0);
+  const visibleSessions =
+    isMultiroom && activeRoomIds ? sessions.filter((s) => activeRoomIds.has(s.room_id)) : sessions;
 
   return (
     <div className="page">
@@ -147,6 +252,8 @@ export default function AdminSessionsPage() {
           </div>
         )}
       </div>
+
+      {isMultiroom && <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />}
 
       {packMessage && <p className="info">{packMessage}</p>}
 
@@ -224,6 +331,14 @@ export default function AdminSessionsPage() {
               required
             />
           </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={form.is_active}
+              onChange={(e) => handleChange("is_active", e.target.checked)}
+            />
+            Actiu (visible als usuaris)
+          </label>
           <div className="admin-form-actions">
             <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
               {form.id ? "Desar canvis" : "Crear"}
@@ -235,23 +350,61 @@ export default function AdminSessionsPage() {
         </form>
       )}
 
+      {selectedIds.size > 0 && (
+        <div className="bulk-actions-bar">
+          <h3>Accions ràpides sobre sessions sel·leccionades ({selectedIds.size})</h3>
+          <div className="table-actions">
+            <Button icon={CheckIcon} variant="primary" onClick={() => handleBulkSetActive(true)}>
+              Activar
+            </Button>
+            <Button icon={XIcon} onClick={() => handleBulkSetActive(false)}>
+              Desactivar
+            </Button>
+            <Button icon={CheckIcon} onClick={handleBulkConfirmPending}>
+              Confirmar pendents
+            </Button>
+            <Button icon={CalendarXIcon} onClick={handleBulkCancelReservations}>
+              Cancel·lar reserves
+            </Button>
+            <Button icon={TrashIcon} variant="danger" onClick={handleBulkDelete}>
+              Esborrar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <table>
         <thead>
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                checked={visibleSessions.length > 0 && selectedIds.size === visibleSessions.length}
+                onChange={toggleSelectAll}
+              />
+            </th>
             <th>Títol</th>
             {isMultiroom && <th>Grup</th>}
             <th>Data</th>
             <th>Horari</th>
             <th>Places</th>
+            <th>Actiu</th>
             {showPending && <th>Pendents</th>}
             <th>Confirmades</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {sessions.map((session) => (
+          {visibleSessions.map((session) => (
             <Fragment key={session.id}>
-              <tr>
+              <tr className={session.is_active ? "" : "row-inactive"}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(session.id)}
+                    onChange={() => toggleSelected(session.id)}
+                  />
+                </td>
                 <td>{session.title || <em>(sense títol)</em>}</td>
                 {isMultiroom && <td>{session.room_name}</td>}
                 <td>{session.date}</td>
@@ -259,12 +412,16 @@ export default function AdminSessionsPage() {
                   {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
                 </td>
                 <td>{session.capacity}</td>
+                <td>{session.is_active ? "Sí" : "No"}</td>
                 {showPending && <td>{session.pending_count ?? 0}</td>}
                 <td>{session.confirmed_count ?? 0}</td>
                 <td>
                   <div className="table-actions">
                     <Button icon={PencilIcon} onClick={() => handleEdit(session)}>
                       Editar
+                    </Button>
+                    <Button icon={PowerIcon} onClick={() => handleToggleActive(session)}>
+                      {session.is_active ? "Desactivar" : "Activar"}
                     </Button>
                     <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(session.id)}>
                       Esborrar
@@ -285,13 +442,14 @@ export default function AdminSessionsPage() {
                     <SessionReservationsPanel
                       sessionId={session.id}
                       autoConfirm={entity.auto_confirm_reservations}
+                      onChanged={load}
                     />
                   </td>
                 </tr>
               )}
             </Fragment>
           ))}
-          {sessions.length === 0 && (
+          {visibleSessions.length === 0 && (
             <tr>
               <td colSpan={columnCount}>No hi ha sessions configurades.</td>
             </tr>
