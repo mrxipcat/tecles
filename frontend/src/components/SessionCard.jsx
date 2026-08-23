@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "./Button.jsx";
 import { CalendarPlusIcon, CalendarXIcon, ChevronDownIcon } from "./icons.jsx";
-import { availabilityClass, availabilityText } from "../utils/availability.js";
+import { availabilityClass, availabilityText, isExpiredSession } from "../utils/availability.js";
 
 export default function SessionCard({ session, onReserve, onCancel }) {
+  const { t } = useTranslation("sessionDisplay");
   const [expanded, setExpanded] = useState(false);
   const full = session.is_available === false;
+  const canReserve = !full && !isExpiredSession(session);
 
   function handleCancelClick() {
-    if (window.confirm(`Vols cancel·lar la reserva de "${session.display_title}"?`)) {
+    if (window.confirm(t("cancelConfirm", { title: session.display_title }))) {
       onCancel(session);
     }
   }
@@ -30,20 +33,25 @@ export default function SessionCard({ session, onReserve, onCancel }) {
               iconOnly
               expanded={expanded}
               onClick={() => setExpanded((v) => !v)}
-              aria-label={expanded ? "Amaga la descripció" : "Mostra la descripció"}
+              aria-label={expanded ? t("hideDescription") : t("showDescription")}
               aria-expanded={expanded}
             />
           )}
           {session.my_reservation_id ? (
             onCancel && (
               <Button icon={CalendarXIcon} variant="danger" onClick={handleCancelClick}>
-                Cancel·la la reserva
+                {t("cancelReservation")}
               </Button>
             )
           ) : (
             onReserve && (
-              <Button icon={CalendarPlusIcon} variant="primary" disabled={full} onClick={() => onReserve(session)}>
-                {full ? "Completa" : "Reservar"}
+              <Button
+                icon={CalendarPlusIcon}
+                variant="primary"
+                disabled={!canReserve}
+                onClick={() => onReserve(session)}
+              >
+                {full ? t("full") : t("reserve")}
               </Button>
             )
           )}

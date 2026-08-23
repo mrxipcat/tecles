@@ -1,6 +1,6 @@
 from datetime import date as date_, datetime, time as time_
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import ReservationStatus, UserRole, VisibilityMode
 
@@ -8,11 +8,21 @@ from app.models import ReservationStatus, UserRole, VisibilityMode
 # ---------- Entity ----------
 
 
+class SlotLabelTranslations(BaseModel):
+    """Alies del "slot" (sessió/torn/reserva...) per idioma. `ca` és obligatori
+    (és el valor de reserva quan `es`/`en` no s'han configurat, vegeu
+    `Entity.slot_label()`); `es`/`en` són opcionals."""
+
+    ca: str
+    es: str | None = None
+    en: str | None = None
+
+
 class EntityBase(BaseModel):
     name: str
     code: str
-    slot_label_singular: str = "Sessió"
-    slot_label_plural: str = "Sessions"
+    slot_label_singular: SlotLabelTranslations = Field(default_factory=lambda: SlotLabelTranslations(ca="Sessió"))
+    slot_label_plural: SlotLabelTranslations = Field(default_factory=lambda: SlotLabelTranslations(ca="Sessions"))
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -29,8 +39,8 @@ class EntityCreate(EntityBase):
 class EntityUpdate(BaseModel):
     name: str | None = None
     code: str | None = None
-    slot_label_singular: str | None = None
-    slot_label_plural: str | None = None
+    slot_label_singular: SlotLabelTranslations | None = None
+    slot_label_plural: SlotLabelTranslations | None = None
     max_reservations_per_day: int | None = None
     max_reservations_per_week: int | None = None
     max_reservations_per_month: int | None = None
@@ -117,9 +127,15 @@ class UserRead(UserBase):
     id: int
     entity_id: int | None
     must_change_password: bool
+    is_active: bool = True
+    language: str | None = None
     visible_room_ids: list[int] = []
     visible_room_names: list[str] = []
     created_at: datetime
+
+
+class UserSelfUpdate(BaseModel):
+    language: str | None = None
 
 
 class UserCreate(BaseModel):
@@ -128,6 +144,7 @@ class UserCreate(BaseModel):
     email: str | None = None
     role: UserRole = UserRole.USER
     initial_password: str
+    is_active: bool = True
     visible_room_ids: list[int] = []
 
 
@@ -135,7 +152,22 @@ class UserUpdate(BaseModel):
     full_name: str | None = None
     email: str | None = None
     role: UserRole | None = None
+    is_active: bool | None = None
     visible_room_ids: list[int] | None = None
+
+
+class UserBulkActiveUpdate(BaseModel):
+    user_ids: list[int]
+    is_active: bool
+
+
+class UserBulkDelete(BaseModel):
+    user_ids: list[int]
+
+
+class UserBulkRoomAction(BaseModel):
+    user_ids: list[int]
+    room_id: int
 
 
 class PasswordResetRequest(BaseModel):
@@ -246,6 +278,24 @@ class SlotSessionBulkDelete(BaseModel):
     session_ids: list[int]
 
 
+class SlotSessionBulkRoomUpdate(BaseModel):
+    session_ids: list[int]
+    room_id: int
+
+
+class SlotSessionBulkCapacityIncrement(BaseModel):
+    session_ids: list[int]
+    amount: int
+
+
+class SlotSessionExportRequest(BaseModel):
+    session_ids: list[int]
+
+
+class SlotSessionDeleteExpiredResult(BaseModel):
+    deleted_count: int
+
+
 class SlotSessionRead(SlotSessionBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -278,6 +328,10 @@ class ReservationBulkSessionAction(BaseModel):
     session_ids: list[int]
 
 
+class ReservationBulkUserAction(BaseModel):
+    user_ids: list[int]
+
+
 class ReservationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -299,3 +353,8 @@ class ReservationAdminRead(ReservationRead):
 
 class ReservationDecision(BaseModel):
     status: ReservationStatus
+
+
+class ReservationsEmailResult(BaseModel):
+    success: bool
+    detail: str

@@ -1,0 +1,14 @@
+{
+  "dayMonth": "{{day}} de {{month}}",
+  "dayMonthYear": "{{day}} de {{month}} de {{year}}",
+  "weekRange": "Semana del {{start}} al {{end}}",
+  "title": "Calendario de {{plural}}",
+  "refresh": "Actualizar",
+  "previous": "Anterior",
+  "today": "Hoy",
+  "next": "Siguiente",
+  "week": "Semana",
+  "month": "Mes",
+  "filterByRoom": "Filtrar por {{room}}",
+  "sessionsFallback": "Sesiones"
+}

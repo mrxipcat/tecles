@@ -203,3 +203,24 @@ export function MailIcon(props) {
     </Icon>
   );
 }
+
+export function DownloadIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3v12" />
+      <polyline points="7 10 12 15 17 10" />
+      <path d="M4 19h16" />
+    </Icon>
+  );
+}
+
+export function ArrowRightLeftIcon(props) {
+  return (
+    <Icon {...props}>
+      <polyline points="16 3 21 8 16 13" />
+      <path d="M21 8H8" />
+      <polyline points="8 21 3 16 8 11" />
+      <path d="M3 16h13" />
+    </Icon>
+  );
+}

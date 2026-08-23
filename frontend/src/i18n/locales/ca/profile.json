@@ -1,0 +1,18 @@
+{
+  "title": "El meu perfil",
+  "accountTitle": "Dades del compte",
+  "username": "Nom d'usuari",
+  "fullName": "Nom complet",
+  "email": "Correu electrònic",
+  "languageTitle": "Idioma de la interfície",
+  "languageHint": "Si no en tries cap, s'utilitzarà l'idioma del navegador.",
+  "languageLabel": "Idioma",
+  "languageAuto": "Automàtic (idioma del sistema)",
+  "languageCa": "Català",
+  "languageEs": "Castellano",
+  "languageEn": "English",
+  "languageUpdated": "S'ha actualitzat l'idioma.",
+  "languageError": "No s'ha pogut actualitzar l'idioma.",
+  "securityTitle": "Seguretat",
+  "changePassword": "Canviar contrasenya"
+}

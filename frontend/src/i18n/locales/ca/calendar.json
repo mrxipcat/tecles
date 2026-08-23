@@ -1,0 +1,14 @@
+{
+  "dayMonth": "{{day}} de {{month}}",
+  "dayMonthYear": "{{day}} de {{month}} de {{year}}",
+  "weekRange": "Setmana del {{start}} al {{end}}",
+  "title": "Calendari de {{plural}}",
+  "refresh": "Actualitza",
+  "previous": "Anterior",
+  "today": "Avui",
+  "next": "Següent",
+  "week": "Setmana",
+  "month": "Mes",
+  "filterByRoom": "Filtrar per {{room}}",
+  "sessionsFallback": "Sessions"
+}

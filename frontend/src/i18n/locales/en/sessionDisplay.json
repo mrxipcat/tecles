@@ -1,0 +1,17 @@
+{
+  "cancelConfirm": "Do you want to cancel the reservation for \"{{title}}\"?",
+  "hideDescription": "Hide description",
+  "showDescription": "Show description",
+  "cancelReservation": "Cancel reservation",
+  "full": "Full",
+  "reserve": "Reserve",
+  "close": "Close",
+  "selectPlaceholder": "Select {{slot}} from the calendar to see its detail.",
+  "reservationConfirmed": "Reservation Confirmed",
+  "reservationPending": "Reservation Requested",
+  "available": "Available",
+  "notAvailable": "Not available",
+  "freePlaces": "Free places: {{available}} / {{capacity}}",
+  "expiredLabel": "* Session Expired *",
+  "sessionFallback": "Session"
+}

@@ -18,6 +18,21 @@ from app.security import hash_password
 router = APIRouter(prefix="/superadmin", tags=["superadmin"], dependencies=[Depends(get_current_superadmin)])
 
 
+def _expand_slot_labels(data: dict) -> dict:
+    """`slot_label_singular`/`slot_label_plural` arriben com a `{"ca": ..., "es": ...,
+    "en": ...}` (vegeu `SlotLabelTranslations`), però a `Entity` cada idioma és una
+    columna pròpia (`slot_label_singular_ca`, etc.) perquè `slot_label_singular` és
+    una `@property` de només lectura. Els "aplana" abans de crear/actualitzar l'ORM."""
+    expanded = dict(data)
+    for field in ("slot_label_singular", "slot_label_plural"):
+        translations = expanded.pop(field, None)
+        if translations is None:
+            continue
+        for lang, value in translations.items():
+            expanded[f"{field}_{lang}"] = value
+    return expanded
+
+
 def _get_entity(entity_id: int, db: DbSession) -> Entity:
     entity = db.get(Entity, entity_id)
     if not entity:
@@ -43,7 +58,7 @@ def create_entity(payload: EntityCreate, db: DbSession = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Ja existeix una entitat amb aquest codi")
 
-    entity = Entity(**payload.model_dump())
+    entity = Entity(**_expand_slot_labels(payload.model_dump()))
     db.add(entity)
     db.flush()
     db.add(Room(entity_id=entity.id, name="Principal"))
@@ -55,7 +70,7 @@ def create_entity(payload: EntityCreate, db: DbSession = Depends(get_db)):
 @router.patch("/entities/{entity_id}", response_model=EntityRead)
 def update_entity(entity_id: int, payload: EntityUpdate, db: DbSession = Depends(get_db)):
     entity = _get_entity(entity_id, db)
-    data = payload.model_dump(exclude_unset=True)
+    data = _expand_slot_labels(payload.model_dump(exclude_unset=True))
 
     new_code = data.get("code")
     if new_code and new_code != entity.code:

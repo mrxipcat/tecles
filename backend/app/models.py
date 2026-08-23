@@ -23,9 +23,8 @@ from app.database import Base
 def compose_display_title(title: str | None, room_name: str | None, show_room: bool) -> str:
     """"Sala: Títol" quan `show_room` és cert i hi ha nom de sala; si no, només el títol
     (o el nom de la sala si el títol és buit)."""
-    label = title or "(sense títol)"
     if not show_room or not room_name:
-        return label
+        return title or room_name or "(sense títol)"
     return f"{room_name}: {title}" if title else room_name
 
 
@@ -54,8 +53,23 @@ class Entity(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
-    slot_label_singular: Mapped[str] = mapped_column(String(50), nullable=False, default="Sessió")
-    slot_label_plural: Mapped[str] = mapped_column(String(50), nullable=False, default="Sessions")
+    # Nom personalitzat del "slot" (sessió/torn/reserva...), configurable per idioma
+    # per un superadministrador (`routers/superadmin.py`). La columna original
+    # (sense sufix) es manté com a valor català per no requerir cap migració de
+    # columna existent; `es`/`en` són columnes noves opcionals afegides a
+    # `_add_missing_columns()`. Exposat a l'API com un diccionari (vegeu
+    # `slot_label_singular`/`slot_label_plural` @property més avall) i resolt
+    # segons l'idioma amb `slot_label()`.
+    slot_label_singular_ca: Mapped[str] = mapped_column(
+        "slot_label_singular", String(50), nullable=False, default="Sessió"
+    )
+    slot_label_plural_ca: Mapped[str] = mapped_column(
+        "slot_label_plural", String(50), nullable=False, default="Sessions"
+    )
+    slot_label_singular_es: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    slot_label_singular_en: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    slot_label_plural_es: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    slot_label_plural_en: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Aplicats a `routers/reservations.py::create_reservation`.
     max_reservations_per_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -87,6 +101,21 @@ class Entity(Base):
     users: Mapped[list["User"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
     sessions: Mapped[list["SlotSession"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
     rooms: Mapped[list["Room"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
+
+    @property
+    def slot_label_singular(self) -> dict[str, str | None]:
+        return {"ca": self.slot_label_singular_ca, "es": self.slot_label_singular_es, "en": self.slot_label_singular_en}
+
+    @property
+    def slot_label_plural(self) -> dict[str, str | None]:
+        return {"ca": self.slot_label_plural_ca, "es": self.slot_label_plural_es, "en": self.slot_label_plural_en}
+
+    def slot_label(self, lang: str | None, *, plural: bool = False) -> str:
+        """Resol l'alies del slot per a `lang`, amb reserva al valor català si no
+        s'ha configurat una traducció per aquest idioma."""
+        lang = lang if lang in ("es", "en") else "ca"
+        prefix = "slot_label_plural" if plural else "slot_label_singular"
+        return getattr(self, f"{prefix}_{lang}") or getattr(self, f"{prefix}_ca")
 
 
 class Room(Base):
@@ -121,6 +150,12 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.USER)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Controla l'accés al portal (vegeu `app/routers/auth.py::login` i
+    # `app/dependencies.py::get_current_user`). No afecta superadministradors,
+    # que en la pràctica sempre es creen actius.
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # None = sense preferència: el frontend fa servir l'idioma del navegador.
+    language: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     entity: Mapped["Entity | None"] = relationship(back_populates="users")

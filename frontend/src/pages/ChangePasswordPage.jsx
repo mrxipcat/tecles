@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/Button.jsx";
 import { SaveIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function ChangePasswordPage() {
+  const { t } = useTranslation("changePassword");
   const { changePassword, mustChangePassword } = useAuth();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -16,24 +18,24 @@ export default function ChangePasswordPage() {
     event.preventDefault();
     setError(null);
     if (newPassword !== confirmPassword) {
-      setError("Les contrasenyes noves no coincideixen.");
+      setError(t("mismatchError"));
       return;
     }
     try {
       await changePassword({ currentPassword, newPassword });
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut canviar la contrasenya.");
+      setError(err.response?.data?.detail || t("genericError"));
     }
   }
 
   return (
     <div className="login-page">
-      <h1>Canviar contrasenya</h1>
-      {mustChangePassword && <p className="login-warning">Cal que canviïs la contrasenya abans de continuar.</p>}
+      <h1>{t("title")}</h1>
+      {mustChangePassword && <p className="login-warning">{t("mustChangeWarning")}</p>}
       <form onSubmit={handleSubmit}>
         <label>
-          Contrasenya actual
+          {t("currentPassword")}
           <input
             type="password"
             value={currentPassword}
@@ -42,11 +44,11 @@ export default function ChangePasswordPage() {
           />
         </label>
         <label>
-          Contrasenya nova
+          {t("newPassword")}
           <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
         </label>
         <label>
-          Repeteix la contrasenya nova
+          {t("confirmPassword")}
           <input
             type="password"
             value={confirmPassword}
@@ -56,7 +58,7 @@ export default function ChangePasswordPage() {
         </label>
         {error && <p className="error">{error}</p>}
         <Button type="submit" icon={SaveIcon} variant="primary">
-          Desar
+          {t("submit")}
         </Button>
       </form>
     </div>

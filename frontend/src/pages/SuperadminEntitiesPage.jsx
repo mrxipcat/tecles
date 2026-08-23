@@ -1,59 +1,70 @@
 import { Fragment, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import { ChevronDownIcon, PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
 import SuperadminEntityAdminsPanel from "../components/SuperadminEntityAdminsPanel.jsx";
 
+const ALIAS_LANGUAGES = ["ca", "es", "en"];
+
 const EMPTY_FORM = {
   name: "",
   code: "",
-  slot_label_singular: "Sessió",
-  slot_label_plural: "Sessions",
+  slot_label_singular: { ca: "Sessió", es: "", en: "" },
+  slot_label_plural: { ca: "Sessions", es: "", en: "" },
 };
 
 function AliasFieldsTable({ values, onChange }) {
+  const { t } = useTranslation("superadminEntities");
   return (
     <table className="alias-table">
       <thead>
         <tr>
-          <th></th>
-          <th>Singular</th>
-          <th>Plural</th>
+          <th>{t("page.aliasLanguageHeader")}</th>
+          <th>{t("page.aliasSingularHeader")}</th>
+          <th>{t("page.aliasPluralHeader")}</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Slot</td>
-          <td>
-            <input
-              value={values.slot_label_singular}
-              onChange={(e) => onChange("slot_label_singular", e.target.value)}
-              required
-            />
-          </td>
-          <td>
-            <input
-              value={values.slot_label_plural}
-              onChange={(e) => onChange("slot_label_plural", e.target.value)}
-              required
-            />
-          </td>
-        </tr>
+        {ALIAS_LANGUAGES.map((lang) => (
+          <tr key={lang}>
+            <td>{t(`page.aliasLanguage.${lang}`)}</td>
+            <td>
+              <input
+                value={values.slot_label_singular[lang] ?? ""}
+                onChange={(e) => onChange("slot_label_singular", lang, e.target.value)}
+                required={lang === "ca"}
+              />
+            </td>
+            <td>
+              <input
+                value={values.slot_label_plural[lang] ?? ""}
+                onChange={(e) => onChange("slot_label_plural", lang, e.target.value)}
+                required={lang === "ca"}
+              />
+            </td>
+          </tr>
+        ))}
       </tbody>
     </table>
   );
+}
+
+function normalizeAliasField(field) {
+  return { ca: field?.ca ?? "", es: field?.es ?? "", en: field?.en ?? "" };
 }
 
 function entityToEditForm(entity) {
   return {
     name: entity.name,
     code: entity.code,
-    slot_label_singular: entity.slot_label_singular,
-    slot_label_plural: entity.slot_label_plural,
+    slot_label_singular: normalizeAliasField(entity.slot_label_singular),
+    slot_label_plural: normalizeAliasField(entity.slot_label_plural),
   };
 }
 
 export default function SuperadminEntitiesPage() {
+  const { t } = useTranslation("superadminEntities");
   const [entities, setEntities] = useState([]);
   const [form, setForm] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -74,6 +85,10 @@ export default function SuperadminEntitiesPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function handleAliasChange(field, lang, value) {
+    setForm((prev) => ({ ...prev, [field]: { ...prev[field], [lang]: value } }));
+  }
+
   function handleNew() {
     setError(null);
     setEditingId(null);
@@ -83,6 +98,10 @@ export default function SuperadminEntitiesPage() {
 
   function handleEditChange(field, value) {
     setEditForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleEditAliasChange(field, lang, value) {
+    setEditForm((prev) => ({ ...prev, [field]: { ...prev[field], [lang]: value } }));
   }
 
   function handleStartEdit(entity) {
@@ -101,7 +120,7 @@ export default function SuperadminEntitiesPage() {
       setEditForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut desar l'entitat.");
+      setError(err.response?.data?.detail || t("page.saveError"));
     }
   }
 
@@ -113,7 +132,7 @@ export default function SuperadminEntitiesPage() {
       setForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut crear l'entitat.");
+      setError(err.response?.data?.detail || t("page.createError"));
     }
   }
 
@@ -124,7 +143,7 @@ export default function SuperadminEntitiesPage() {
       if (expandedId === entityId) setExpandedId(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut eliminar l'entitat.");
+      setError(err.response?.data?.detail || t("page.deleteError"));
     }
   }
 
@@ -135,10 +154,10 @@ export default function SuperadminEntitiesPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Administració d'entitats</h1>
+        <h1>{t("page.title")}</h1>
         {!form && (
           <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
-            Nova entitat
+            {t("page.newEntity")}
           </Button>
         )}
       </div>
@@ -147,22 +166,22 @@ export default function SuperadminEntitiesPage() {
 
       {form && (
         <form className="admin-form" onSubmit={handleSubmit}>
-          <h2>Nova entitat</h2>
+          <h2>{t("page.newEntity")}</h2>
           <label>
-            Nom
+            {t("page.nameLabel")}
             <input value={form.name} onChange={(e) => handleChange("name", e.target.value)} required />
           </label>
           <label>
-            Codi
+            {t("page.codeLabel")}
             <input value={form.code} onChange={(e) => handleChange("code", e.target.value)} required />
           </label>
-          <AliasFieldsTable values={form} onChange={handleChange} />
+          <AliasFieldsTable values={form} onChange={handleAliasChange} />
           <div className="admin-form-actions">
             <Button type="submit" icon={PlusIcon} variant="primary">
-              Crear
+              {t("common.create")}
             </Button>
             <Button icon={XIcon} onClick={() => setForm(null)}>
-              Tancar
+              {t("page.close")}
             </Button>
           </div>
         </form>
@@ -170,19 +189,19 @@ export default function SuperadminEntitiesPage() {
 
       {editForm && (
         <form className="admin-form" onSubmit={handleEditSubmit}>
-          <h2>Editar entitat</h2>
+          <h2>{t("page.editEntityHeading")}</h2>
           <label>
-            Nom
+            {t("page.nameLabel")}
             <input value={editForm.name} onChange={(e) => handleEditChange("name", e.target.value)} required />
           </label>
           <label>
-            Codi
+            {t("page.codeLabel")}
             <input value={editForm.code} onChange={(e) => handleEditChange("code", e.target.value)} required />
           </label>
-          <AliasFieldsTable values={editForm} onChange={handleEditChange} />
+          <AliasFieldsTable values={editForm} onChange={handleEditAliasChange} />
           <div className="admin-form-actions">
             <Button type="submit" icon={SaveIcon} variant="primary">
-              Desar
+              {t("page.save")}
             </Button>
             <Button
               icon={XIcon}
@@ -191,7 +210,7 @@ export default function SuperadminEntitiesPage() {
                 setEditForm(null);
               }}
             >
-              Tancar
+              {t("page.close")}
             </Button>
           </div>
         </form>
@@ -200,8 +219,8 @@ export default function SuperadminEntitiesPage() {
       <table>
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Codi</th>
+            <th>{t("page.nameLabel")}</th>
+            <th>{t("page.codeLabel")}</th>
             <th></th>
           </tr>
         </thead>
@@ -214,17 +233,17 @@ export default function SuperadminEntitiesPage() {
                 <td>
                   <div className="table-actions">
                     <Button icon={PencilIcon} onClick={() => handleStartEdit(e)}>
-                      Editar
+                      {t("page.edit")}
                     </Button>
                     <Button
                       icon={ChevronDownIcon}
                       expanded={expandedId === e.id}
                       onClick={() => toggleAdmins(e.id)}
                     >
-                      {expandedId === e.id ? "Amagar admins" : "Gestionar admins"}
+                      {expandedId === e.id ? t("page.hideAdmins") : t("page.manageAdmins")}
                     </Button>
                     <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(e.id)}>
-                      Esborrar
+                      {t("common.delete")}
                     </Button>
                   </div>
                 </td>
@@ -240,7 +259,7 @@ export default function SuperadminEntitiesPage() {
           ))}
           {entities.length === 0 && (
             <tr>
-              <td colSpan={3}>No hi ha entitats configurades.</td>
+              <td colSpan={3}>{t("page.noEntities")}</td>
             </tr>
           )}
         </tbody>

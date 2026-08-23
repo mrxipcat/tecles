@@ -1,0 +1,31 @@
+{
+  "title": "My reservations",
+  "downloadPdf": "Download PDF",
+  "sendEmail": "Email it to me",
+  "confirmCancel": "Do you want to cancel the reservation for \"{{title}}\"?",
+  "cancelError": "The reservation could not be cancelled.",
+  "sendEmailError": "The email could not be sent.",
+  "sessionFallback": "Session",
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "cancelled_by_admin": "Cancelled by the organizer"
+  },
+  "columns": {
+    "date": "Date",
+    "schedule": "Time",
+    "status": "Status",
+    "requested": "Requested",
+    "confirmed": "Confirmed"
+  },
+  "pdf": {
+    "subtitle": "My reservations — {{userName}}",
+    "printedAt": "Printed on {{date}}",
+    "fileName": "my-reservations.pdf"
+  },
+  "addToCalendar": "Add to calendar",
+  "cancelReservation": "Cancel reservation",
+  "empty": "You don't have any reservations."
+}

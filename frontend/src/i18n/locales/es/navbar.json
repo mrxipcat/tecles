@@ -1,0 +1,19 @@
+{
+  "superadminEntities": "Superadmin: Entidades",
+  "list": "Listado",
+  "calendar": "Calendario",
+  "myReservations": "Mis reservas",
+  "administration": "Administración",
+  "rooms": "Grupos",
+  "users": "Usuarios",
+  "config": "Configuración",
+  "profile": "Perfil",
+  "sessionsFallback": "Sesiones",
+  "logout": "Salir",
+  "login": "Entrar",
+  "roles": {
+    "user": "usuario",
+    "admin": "administrador",
+    "superadmin": "superadministrador"
+  }
+}

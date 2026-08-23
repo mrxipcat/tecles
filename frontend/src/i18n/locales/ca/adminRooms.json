@@ -1,0 +1,18 @@
+{
+  "pageHeading": "Grups",
+  "multiroomDisabledMessage": "Activa el mode multisala a la configuració de l'entitat per gestionar grups.",
+  "adminHeading": "Administració de grups",
+  "newRoomButton": "Nou grup",
+  "editRoomHeading": "Editar grup",
+  "newRoomHeading": "Nou grup",
+  "nameLabel": "Nom",
+  "saveChangesButton": "Desar canvis",
+  "createButton": "Crear",
+  "closeButton": "Tancar",
+  "tableNameHeader": "Nom",
+  "editButton": "Editar",
+  "deleteButton": "Esborrar",
+  "emptyState": "No hi ha grups configurats.",
+  "errorSaveFailed": "No s'ha pogut desar el grup.",
+  "errorDeleteFailed": "No s'ha pogut eliminar el grup."
+}

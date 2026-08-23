@@ -1,0 +1,24 @@
+{
+  "heading": "Nuevo pack de {{plural}}",
+  "fields": {
+    "title": "Título (opcional)",
+    "room": "Grupo",
+    "roomPlaceholder": "Selecciona un grupo",
+    "startDate": "Fecha inicio",
+    "endDate": "Fecha final",
+    "durationHours": "Duración (horas)",
+    "capacity": "Plazas",
+    "startTimes": "Horas de inicio",
+    "startTimesPlaceholder": "8:00, 10:00, 12:00, 16:00"
+  },
+  "info": "Se creará una {{singular}} por cada hora de inicio, cada día del rango de fechas.",
+  "errors": {
+    "endDateBeforeStart": "La fecha final debe ser posterior o igual a la fecha de inicio.",
+    "noStartTimes": "Debes indicar al menos una hora de inicio.",
+    "createFailed": "No se ha podido crear el pack de {{plural}}."
+  },
+  "actions": {
+    "submit": "Crear pack de {{plural}}",
+    "cancel": "Cancelar"
+  }
+}

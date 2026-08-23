@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "./Button.jsx";
 import { ChevronDownIcon, LogOutIcon } from "./icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { resolveSlotLabel } from "../utils/entityLabels.js";
 
 function navLinkClass({ isActive }) {
   return `nav-link ${isActive ? "is-active" : ""}`;
 }
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation("navbar");
   const { user, entity, isAuthenticated, isAdmin, isSuperadmin, logout } = useAuth();
   const location = useLocation();
-  const plural = entity?.slot_label_plural ?? "Sessions";
+  const plural = resolveSlotLabel(entity?.slot_label_plural, i18n.language) ?? t("sessionsFallback");
   const brand = isAuthenticated && entity ? entity.name : "Tecles";
   const isAdminRouteActive = location.pathname.startsWith("/admin");
 
@@ -38,19 +41,19 @@ export default function Navbar() {
       <div className="navbar-links">
         {isAuthenticated && isSuperadmin && (
           <NavLink to="/superadmin/entitats" className={navLinkClass}>
-            Superadmin: Entitats
+            {t("superadminEntities")}
           </NavLink>
         )}
         {isAuthenticated && !isSuperadmin && (
           <>
             <NavLink to="/" end className={navLinkClass}>
-              Llistat
+              {t("list")}
             </NavLink>
             <NavLink to="/calendari" className={navLinkClass}>
-              Calendari
+              {t("calendar")}
             </NavLink>
             <NavLink to="/les-meves-reserves" className={navLinkClass}>
-              Les meves reserves
+              {t("myReservations")}
             </NavLink>
             {isAdmin && (
               <div className="nav-dropdown" ref={adminMenuRef}>
@@ -59,7 +62,7 @@ export default function Navbar() {
                   className={`nav-link nav-dropdown-toggle ${isAdminRouteActive ? "is-active" : ""}`}
                   onClick={() => setAdminMenuOpen((prev) => !prev)}
                 >
-                  Administració
+                  {t("administration")}
                   <ChevronDownIcon />
                 </button>
                 {adminMenuOpen && (
@@ -69,14 +72,14 @@ export default function Navbar() {
                     </NavLink>
                     {entity?.is_multiroom && (
                       <NavLink to="/admin/sales" className={navLinkClass}>
-                        Grups
+                        {t("rooms")}
                       </NavLink>
                     )}
                     <NavLink to="/admin/usuaris" className={navLinkClass}>
-                      Usuaris
+                      {t("users")}
                     </NavLink>
                     <NavLink to="/admin/entitat" className={navLinkClass}>
-                      Configuració
+                      {t("config")}
                     </NavLink>
                   </div>
                 )}
@@ -88,13 +91,15 @@ export default function Navbar() {
       <div className="navbar-user">
         {isAuthenticated ? (
           <>
-            <span>{user.full_name || user.username} ({user.role})</span>
+            <Link to="/perfil" className="nav-link">
+              {user.full_name || user.username} ({t(`roles.${user.role}`)})
+            </Link>
             <Button icon={LogOutIcon} onClick={logout}>
-              Sortir
+              {t("logout")}
             </Button>
           </>
         ) : (
-          <Link to="/login">Entrar</Link>
+          <Link to="/login">{t("login")}</Link>
         )}
       </div>
     </nav>

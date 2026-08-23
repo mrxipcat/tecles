@@ -15,7 +15,12 @@ export default function ProtectedRoute({
   if (mustChangePassword && location.pathname !== "/canviar-contrasenya") {
     return <Navigate to="/canviar-contrasenya" replace />;
   }
-  if (isSuperadmin && !requireSuperadmin && location.pathname !== "/canviar-contrasenya") {
+  if (
+    isSuperadmin &&
+    !requireSuperadmin &&
+    location.pathname !== "/canviar-contrasenya" &&
+    location.pathname !== "/perfil"
+  ) {
     return <Navigate to="/superadmin/entitats" replace />;
   }
   if (requireSuperadmin && !isSuperadmin) {

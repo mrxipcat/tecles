@@ -1,0 +1,18 @@
+{
+  "title": "Mi perfil",
+  "accountTitle": "Datos de la cuenta",
+  "username": "Nombre de usuario",
+  "fullName": "Nombre completo",
+  "email": "Correo electrónico",
+  "languageTitle": "Idioma de la interfaz",
+  "languageHint": "Si no eliges ninguno, se usará el idioma del navegador.",
+  "languageLabel": "Idioma",
+  "languageAuto": "Automático (idioma del sistema)",
+  "languageCa": "Català",
+  "languageEs": "Castellano",
+  "languageEn": "English",
+  "languageUpdated": "Se ha actualizado el idioma.",
+  "languageError": "No se ha podido actualizar el idioma.",
+  "securityTitle": "Seguridad",
+  "changePassword": "Cambiar contraseña"
+}

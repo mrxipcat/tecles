@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "./Button.jsx";
 import { CalendarXIcon, CheckIcon, XIcon } from "./icons.jsx";
 
 export default function SessionReservationsPanel({ sessionId, autoConfirm, onChanged }) {
+  const { t } = useTranslation("reservationsPanels");
   const [reservations, setReservations] = useState([]);
 
   const load = useCallback(async () => {
@@ -22,7 +24,11 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm, onCha
   }
 
   async function cancelConfirmed(reservation) {
-    if (!window.confirm(`Vols cancel·lar la reserva de "${reservation.user.full_name || reservation.user.username}"?`)) {
+    if (
+      !window.confirm(
+        t("cancelReservationForUser", { name: reservation.user.full_name || reservation.user.username })
+      )
+    ) {
       return;
     }
     await client.delete(`/reservations/${reservation.id}`);
@@ -37,14 +43,14 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm, onCha
     <div className="reservations-panel">
       {!autoConfirm && (
         <section>
-          <h4>Sol·licituds pendents</h4>
-          {pending.length === 0 && <p>Cap sol·licitud pendent.</p>}
+          <h4>{t("pendingHeading")}</h4>
+          {pending.length === 0 && <p>{t("noPending")}</p>}
           {pending.length > 0 && (
             <table>
               <thead>
                 <tr>
-                  <th>Usuari</th>
-                  <th>Sol·licitat el</th>
+                  <th>{t("userColumn")}</th>
+                  <th>{t("requestedAtColumn")}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -56,10 +62,10 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm, onCha
                     <td>
                       <div className="table-actions">
                         <Button icon={CheckIcon} variant="primary" onClick={() => decide(r.id, "confirmed")}>
-                          Confirmar
+                          {t("confirmAction")}
                         </Button>
                         <Button icon={XIcon} variant="danger" onClick={() => decide(r.id, "rejected")}>
-                          Rebutjar
+                          {t("rejectAction")}
                         </Button>
                       </div>
                     </td>
@@ -71,15 +77,15 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm, onCha
         </section>
       )}
       <section>
-        <h4>Reserves confirmades</h4>
-        {confirmed.length === 0 && <p>Cap reserva confirmada.</p>}
+        <h4>{t("confirmedHeading")}</h4>
+        {confirmed.length === 0 && <p>{t("noConfirmed")}</p>}
         {confirmed.length > 0 && (
           <table>
             <thead>
               <tr>
-                <th>Usuari</th>
-                <th>Sol·licitat el</th>
-                <th>Confirmat el</th>
+                <th>{t("userColumn")}</th>
+                <th>{t("requestedAtColumn")}</th>
+                <th>{t("confirmedAtColumn")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -91,7 +97,7 @@ export default function SessionReservationsPanel({ sessionId, autoConfirm, onCha
                   <td>{r.confirmed_at ? new Date(r.confirmed_at).toLocaleString() : ""}</td>
                   <td>
                     <Button icon={CalendarXIcon} variant="danger" onClick={() => cancelConfirmed(r)}>
-                      Cancel·la
+                      {t("cancelAction")}
                     </Button>
                   </td>
                 </tr>

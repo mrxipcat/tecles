@@ -1,23 +1,25 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
-import { CalendarPlusIcon, CalendarXIcon, SaveIcon } from "../components/icons.jsx";
+import { CalendarPlusIcon, CalendarXIcon, MailIcon, SaveIcon } from "../components/icons.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { downloadReservationIcs } from "../utils/ics.js";
-
-const STATUS_LABELS = {
-  pending: "Pendent",
-  confirmed: "Confirmada",
-  rejected: "Rebutjada",
-  cancelled: "Cancel·lada",
-  cancelled_by_admin: "Cancel·lada per l'organitzador",
-};
+import { resolveSlotLabel } from "../utils/entityLabels.js";
 
 const DOWNLOADABLE_STATUSES = ["pending", "confirmed"];
 
 export default function MyReservationsPage() {
+  const { t, i18n } = useTranslation("myReservations");
   const { user, entity } = useAuth();
-  const singular = entity?.slot_label_singular ?? "Sessió";
+  const STATUS_LABELS = {
+    pending: t("status.pending"),
+    confirmed: t("status.confirmed"),
+    rejected: t("status.rejected"),
+    cancelled: t("status.cancelled"),
+    cancelled_by_admin: t("status.cancelled_by_admin"),
+  };
+  const singular = resolveSlotLabel(entity?.slot_label_singular, i18n.language) ?? t("sessionFallback");
   const [reservations, setReservations] = useState([]);
 
   async function load() {
@@ -30,14 +32,14 @@ export default function MyReservationsPage() {
   }, []);
 
   async function handleCancel(reservation) {
-    if (!window.confirm(`Vols cancel·lar la reserva de "${reservation.session_title}"?`)) {
+    if (!window.confirm(t("confirmCancel", { title: reservation.session_title }))) {
       return;
     }
     try {
       await client.delete(`/reservations/${reservation.id}`);
       load();
     } catch (err) {
-      window.alert(err.response?.data?.detail || "No s'ha pogut cancel·lar la reserva.");
+      window.alert(err.response?.data?.detail || t("cancelError"));
     }
   }
 
@@ -66,19 +68,28 @@ export default function MyReservationsPage() {
 
     autoTable(doc, {
       startY: 28,
-      head: [[singular, "Data", "Horari", "Estat"]],
+      head: [[singular, t("columns.date"), t("columns.schedule"), t("columns.status")]],
       body: rows,
       didDrawPage: () => {
         doc.setFontSize(14);
         doc.text(entityName, 14, 14);
         doc.setFontSize(10);
-        doc.text(`Les meves reserves — ${userName}`, 14, 20);
+        doc.text(t("pdf.subtitle", { userName }), 14, 20);
 
         doc.setFontSize(8);
-        doc.text(`Imprès el ${printedAt}`, 14, pageHeight - 10);
+        doc.text(t("pdf.printedAt", { date: printedAt }), 14, pageHeight - 10);
       },
     });
-    doc.save("les-meves-reserves.pdf");
+    doc.save(t("pdf.fileName"));
+  }
+
+  async function handleSendEmail() {
+    try {
+      const { data } = await client.post("/reservations/send-my-list-email");
+      window.alert(data.detail);
+    } catch (err) {
+      window.alert(err.response?.data?.detail || t("sendEmailError"));
+    }
   }
 
   const hasDownloadable = reservations.some((r) => DOWNLOADABLE_STATUSES.includes(r.status));
@@ -86,22 +97,29 @@ export default function MyReservationsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Les meves reserves</h1>
-        {hasDownloadable && (
-          <Button icon={SaveIcon} onClick={handleDownloadPdf}>
-            Descarrega PDF
-          </Button>
-        )}
+        <h1>{t("title")}</h1>
+        <div className="table-actions">
+          {hasDownloadable && (
+            <Button icon={SaveIcon} onClick={handleDownloadPdf}>
+              {t("downloadPdf")}
+            </Button>
+          )}
+          {user?.email && hasDownloadable && (
+            <Button icon={MailIcon} onClick={handleSendEmail}>
+              {t("sendEmail")}
+            </Button>
+          )}
+        </div>
       </div>
       <table className="my-reservations-table">
         <thead>
           <tr>
             <th>{singular}</th>
-            <th>Data</th>
-            <th>Horari</th>
-            <th>Estat</th>
-            <th>Sol·licitada</th>
-            <th>Confirmada</th>
+            <th>{t("columns.date")}</th>
+            <th>{t("columns.schedule")}</th>
+            <th>{t("columns.status")}</th>
+            <th>{t("columns.requested")}</th>
+            <th>{t("columns.confirmed")}</th>
             <th></th>
           </tr>
         </thead>
@@ -128,12 +146,12 @@ export default function MyReservationsPage() {
                       icon={CalendarPlusIcon}
                       onClick={() => downloadReservationIcs(reservation, entity?.name)}
                     >
-                      Afegeix al calendari
+                      {t("addToCalendar")}
                     </Button>
                   )}
                   {(reservation.status === "pending" || reservation.status === "confirmed") && (
                     <Button icon={CalendarXIcon} variant="danger" onClick={() => handleCancel(reservation)}>
-                      Cancel·la la reserva
+                      {t("cancelReservation")}
                     </Button>
                   )}
                 </div>
@@ -142,7 +160,7 @@ export default function MyReservationsPage() {
           ))}
         </tbody>
       </table>
-      {reservations.length === 0 && <p>No tens cap reserva.</p>}
+      {reservations.length === 0 && <p>{t("empty")}</p>}
     </div>
   );
 }

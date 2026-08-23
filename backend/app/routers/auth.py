@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session as DbSession
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import Entity, User
-from app.schemas import ChangePasswordRequest, LoginRequest, LoginResponse, UserRead
+from app.schemas import ChangePasswordRequest, LoginRequest, LoginResponse, UserRead, UserSelfUpdate
 from app.security import encode_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+SUPPORTED_LANGUAGES = {"ca", "es", "en"}
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -38,6 +40,8 @@ def login(payload: LoginRequest, db: DbSession = Depends(get_db)):
 
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Credencials incorrectes")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Aquest compte ha estat desactivat")
 
     token = encode_token(user)
     return LoginResponse(access_token=token, user=UserRead.model_validate(user))
@@ -59,6 +63,22 @@ def change_password(
 
     current_user.password_hash = hash_password(payload.new_password)
     current_user.must_change_password = False
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me", response_model=UserRead)
+def update_me(
+    payload: UserSelfUpdate,
+    db: DbSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Actualització del propi perfil (de moment només l'idioma d'interfície)."""
+    if payload.language is not None and payload.language not in SUPPORTED_LANGUAGES:
+        raise HTTPException(status_code=400, detail="Idioma no suportat")
+
+    current_user.language = payload.language
     db.commit()
     db.refresh(current_user)
     return current_user

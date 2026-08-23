@@ -1,0 +1,17 @@
+{
+  "pendingHeading": "Solicitudes pendientes",
+  "noPending": "No hay solicitudes pendientes.",
+  "confirmedHeading": "Reservas confirmadas",
+  "noConfirmed": "No hay reservas confirmadas.",
+  "userColumn": "Usuario",
+  "sessionColumn": "Sesión",
+  "dateColumn": "Fecha",
+  "scheduleColumn": "Horario",
+  "requestedAtColumn": "Solicitado el",
+  "confirmedAtColumn": "Confirmado el",
+  "confirmAction": "Confirmar",
+  "rejectAction": "Rechazar",
+  "cancelAction": "Cancelar",
+  "cancelReservationForUser": "¿Quieres cancelar la reserva de \"{{name}}\"?",
+  "cancelReservationForSession": "¿Quieres cancelar la reserva \"{{title}}\"?"
+}

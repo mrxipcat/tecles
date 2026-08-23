@@ -1,6 +1,9 @@
+import io
 from datetime import datetime as datetime_, time as time_, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
 from sqlalchemy.orm import Session as DbSession
 
 from app.database import get_db
@@ -18,8 +21,12 @@ from app.models import (
 from app.sanitize import sanitize_rich_text
 from app.schemas import (
     SlotSessionBulkActiveUpdate,
+    SlotSessionBulkCapacityIncrement,
     SlotSessionBulkDelete,
+    SlotSessionBulkRoomUpdate,
     SlotSessionCreate,
+    SlotSessionDeleteExpiredResult,
+    SlotSessionExportRequest,
     SlotSessionPackCreate,
     SlotSessionRead,
     SlotSessionUpdate,
@@ -28,6 +35,11 @@ from app.schemas import (
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 MAX_PACK_SESSIONS = 500
+ENROLLED_STATUSES = (ReservationStatus.PENDING, ReservationStatus.CONFIRMED)
+ENROLLED_STATUS_LABELS = {
+    ReservationStatus.PENDING: "Pendent",
+    ReservationStatus.CONFIRMED: "Confirmada",
+}
 
 
 def _occupied_count(session_id: int, db: DbSession) -> int:
@@ -39,6 +51,10 @@ def _occupied_count(session_id: int, db: DbSession) -> int:
         )
         .count()
     )
+
+
+def _is_expired(session: SlotSession) -> bool:
+    return datetime_.combine(session.date, session.end_time) < datetime_.now()
 
 
 def _has_active_reservation(session_id: int, user_id: int, db: DbSession) -> bool:
@@ -147,6 +163,9 @@ def list_sessions(
             query = query.filter(SlotSession.room_id.in_(visible_room_ids))
     sessions = query.order_by(SlotSession.date, SlotSession.start_time).all()
 
+    if not is_admin:
+        sessions = [session for session in sessions if not _is_expired(session)]
+
     if current_user is not None and current_user.role == UserRole.USER:
         sessions = [
             session
@@ -167,7 +186,7 @@ def get_session(
 ):
     session = db.get(SlotSession, session_id)
     is_admin = current_user is not None and current_user.role == UserRole.ADMIN
-    if not session or (not session.is_active and not is_admin):
+    if not session or (not is_admin and (not session.is_active or _is_expired(session))):
         raise HTTPException(status_code=404, detail="Sessió no trobada")
     return _serialize_session(session, current_user, db)
 
@@ -298,6 +317,108 @@ def bulk_delete_sessions(
     for session in sessions:
         db.delete(session)
     db.commit()
+
+
+@router.delete("/expired", response_model=SlotSessionDeleteExpiredResult)
+def delete_expired_sessions(
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    # L'esborrat de la sessió arrossega (cascade) totes les seves reserves i
+    # l'historial de sol·licituds; no es notifica cap usuari (com ja passa amb
+    # `delete_session`).
+    sessions = db.query(SlotSession).filter(SlotSession.entity_id == admin.entity_id).all()
+    expired = [session for session in sessions if _is_expired(session)]
+    for session in expired:
+        db.delete(session)
+    db.commit()
+    return SlotSessionDeleteExpiredResult(deleted_count=len(expired))
+
+
+@router.patch("/bulk-room", response_model=list[SlotSessionRead])
+def bulk_update_room(
+    payload: SlotSessionBulkRoomUpdate,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    if not admin.entity.is_multiroom:
+        raise HTTPException(status_code=400, detail="Activa el mode multisala per assignar grups")
+    room = db.get(Room, payload.room_id)
+    if not room or room.entity_id != admin.entity_id:
+        raise HTTPException(status_code=400, detail="Grup no vàlid")
+
+    sessions = _resolve_owned_sessions(payload.session_ids, admin, db)
+    for session in sessions:
+        session.room_id = room.id
+    db.commit()
+    for session in sessions:
+        db.refresh(session)
+    return [_serialize_session(session, admin, db) for session in sessions]
+
+
+@router.patch("/bulk-add-capacity", response_model=list[SlotSessionRead])
+def bulk_add_capacity(
+    payload: SlotSessionBulkCapacityIncrement,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    if payload.amount <= 0:
+        raise HTTPException(status_code=400, detail="El nombre de places a afegir ha de ser més gran que 0")
+
+    sessions = _resolve_owned_sessions(payload.session_ids, admin, db)
+    for session in sessions:
+        session.capacity += payload.amount
+    db.commit()
+    for session in sessions:
+        db.refresh(session)
+    return [_serialize_session(session, admin, db) for session in sessions]
+
+
+@router.post("/export-reservations-xlsx")
+def export_reservations_xlsx(
+    payload: SlotSessionExportRequest,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    sessions = _resolve_owned_sessions(payload.session_ids, admin, db)
+    sessions.sort(key=lambda session: (session.date, session.start_time))
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Inscrits"
+    sheet.append(["Sessió", "Grup", "Data", "Horari", "Usuari", "Nom complet", "Correu electrònic", "Estat"])
+
+    for session in sessions:
+        reservations = (
+            db.query(Reservation)
+            .join(User, Reservation.user_id == User.id)
+            .filter(Reservation.session_id == session.id, Reservation.status.in_(ENROLLED_STATUSES))
+            .order_by(User.full_name, User.username)
+            .all()
+        )
+        for reservation in reservations:
+            user = reservation.user
+            sheet.append(
+                [
+                    session.title or "(sense títol)",
+                    session.room_name,
+                    session.date.strftime("%d/%m/%Y"),
+                    f"{session.start_time.strftime('%H:%M')}-{session.end_time.strftime('%H:%M')}",
+                    user.username,
+                    user.full_name or "",
+                    user.email or "",
+                    ENROLLED_STATUS_LABELS[reservation.status],
+                ]
+            )
+
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="inscrits.xlsx"'},
+    )
 
 
 @router.patch("/{session_id}", response_model=SlotSessionRead)

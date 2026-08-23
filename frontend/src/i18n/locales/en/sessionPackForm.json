@@ -1,0 +1,24 @@
+{
+  "heading": "New {{plural}} pack",
+  "fields": {
+    "title": "Title (optional)",
+    "room": "Group",
+    "roomPlaceholder": "Select a group",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "durationHours": "Duration (hours)",
+    "capacity": "Capacity",
+    "startTimes": "Start times",
+    "startTimesPlaceholder": "8:00, 10:00, 12:00, 16:00"
+  },
+  "info": "A {{singular}} will be created for each start time, on every day within the date range.",
+  "errors": {
+    "endDateBeforeStart": "The end date must be later than or equal to the start date.",
+    "noStartTimes": "You must specify at least one start time.",
+    "createFailed": "Could not create the {{plural}} pack."
+  },
+  "actions": {
+    "submit": "Create {{plural}} pack",
+    "cancel": "Cancel"
+  }
+}

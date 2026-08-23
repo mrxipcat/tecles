@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "./Button.jsx";
 import { PlusIcon, XIcon } from "./icons.jsx";
@@ -13,19 +14,20 @@ const EMPTY_FORM = {
   start_times: "",
 };
 
-function parseStartTimes(raw) {
+function parseStartTimes(raw, emptyMessage) {
   const times = raw
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
 
   if (times.length === 0) {
-    throw new Error("Cal indicar almenys una hora d'inici.");
+    throw new Error(emptyMessage);
   }
   return times;
 }
 
-export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCancel }) {
+export default function SessionPackForm({ isMultiroom, rooms, singular, plural, onCreated, onCancel }) {
+  const { t } = useTranslation("sessionPackForm");
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,13 +41,13 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
     setError(null);
 
     if (form.end_date < form.start_date) {
-      setError("La data final ha de ser posterior o igual a la data d'inici.");
+      setError(t("errors.endDateBeforeStart"));
       return;
     }
 
     let startTimes;
     try {
-      startTimes = parseStartTimes(form.start_times);
+      startTimes = parseStartTimes(form.start_times, t("errors.noStartTimes"));
     } catch (err) {
       setError(err.message);
       return;
@@ -64,7 +66,7 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
       });
       onCreated(data.length);
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut crear el pack de sessions.");
+      setError(err.response?.data?.detail || t("errors.createFailed", { plural }));
     } finally {
       setSubmitting(false);
     }
@@ -72,17 +74,17 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
 
   return (
     <form className="admin-form" onSubmit={handleSubmit}>
-      <h2>Nou pack de sessions</h2>
+      <h2>{t("heading", { plural })}</h2>
       <label>
-        Títol (opcional)
+        {t("fields.title")}
         <input value={form.title} onChange={(e) => handleChange("title", e.target.value)} />
       </label>
       {isMultiroom && (
         <label>
-          Grup
+          {t("fields.room")}
           <select value={form.room_id} onChange={(e) => handleChange("room_id", e.target.value)} required>
             <option value="" disabled>
-              Selecciona un grup
+              {t("fields.roomPlaceholder")}
             </option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
@@ -94,7 +96,7 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
       )}
       <div className="form-row">
         <label>
-          Data inici
+          {t("fields.startDate")}
           <input
             type="date"
             value={form.start_date}
@@ -103,7 +105,7 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
           />
         </label>
         <label>
-          Data final
+          {t("fields.endDate")}
           <input
             type="date"
             value={form.end_date}
@@ -114,7 +116,7 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
       </div>
       <div className="form-row">
         <label>
-          Durada (hores)
+          {t("fields.durationHours")}
           <input
             type="number"
             min="0.25"
@@ -125,7 +127,7 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
           />
         </label>
         <label>
-          Places
+          {t("fields.capacity")}
           <input
             type="number"
             min="1"
@@ -136,22 +138,22 @@ export default function SessionPackForm({ isMultiroom, rooms, onCreated, onCance
         </label>
       </div>
       <label>
-        Hores d'inici
+        {t("fields.startTimes")}
         <input
           value={form.start_times}
           onChange={(e) => handleChange("start_times", e.target.value)}
-          placeholder="8:00, 10:00, 12:00, 16:00"
+          placeholder={t("fields.startTimesPlaceholder")}
           required
         />
       </label>
-      <p className="info">Es crearà una sessió per cada hora d'inici, cada dia del rang de dates.</p>
+      <p className="info">{t("info", { singular })}</p>
       {error && <p className="error">{error}</p>}
       <div className="admin-form-actions">
         <Button type="submit" icon={PlusIcon} variant="primary" disabled={submitting}>
-          Crear pack de sessions
+          {t("actions.submit", { plural })}
         </Button>
         <Button icon={XIcon} onClick={onCancel} disabled={submitting}>
-          Cancel·lar
+          {t("actions.cancel")}
         </Button>
       </div>
     </form>

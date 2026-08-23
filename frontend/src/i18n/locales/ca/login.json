@@ -1,0 +1,10 @@
+{
+  "title": "Entrar",
+  "titleWithEntity": "Entrar a {{entityName}}",
+  "entityCode": "Codi d'entitat",
+  "username": "Nom d'usuari",
+  "password": "Contrasenya",
+  "submit": "Entrar",
+  "genericError": "Error d'inici de sessió",
+  "buildInfo": "Versió {{version}} · Desplegat el {{date}}"
+}

@@ -1,15 +1,17 @@
 import { useEffect, useRef } from "react";
 import DOMPurify from "dompurify";
+import { useTranslation } from "react-i18next";
 
 const TOOLBAR_ACTIONS = [
-  { command: "bold", label: "N", title: "Negreta" },
-  { command: "italic", label: "I", title: "Cursiva" },
-  { command: "underline", label: "S", title: "Subratllat" },
-  { command: "insertUnorderedList", label: "•", title: "Llista" },
-  { command: "insertOrderedList", label: "1.", title: "Llista numerada" },
+  { command: "bold", label: "N", titleKey: "bold" },
+  { command: "italic", label: "I", titleKey: "italic" },
+  { command: "underline", label: "S", titleKey: "underline" },
+  { command: "insertUnorderedList", label: "•", titleKey: "unorderedList" },
+  { command: "insertOrderedList", label: "1.", titleKey: "orderedList" },
 ];
 
 export default function RichTextEditor({ value, onChange, placeholder }) {
+  const { t } = useTranslation("richTextEditor");
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
   }
 
   function insertLink() {
-    const input = window.prompt("URL de l'enllaç (https://...)");
+    const input = window.prompt(t("linkUrlPrompt"));
     if (!input) return;
     // Sense protocol (p. ex. "www.instagram.com"), el navegador el resoldria com una
     // ruta relativa de la mateixa app en lloc d'un enllaç extern.
@@ -72,16 +74,16 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
           <button
             key={action.command}
             type="button"
-            title={action.title}
+            title={t(action.titleKey)}
             onClick={() => runCommand(action.command)}
           >
             {action.label}
           </button>
         ))}
-        <button type="button" title="Insereix un enllaç" onClick={insertLink}>
+        <button type="button" title={t("insertLink")} onClick={insertLink}>
           🔗
         </button>
-        <button type="button" title="Treu l'enllaç" onClick={removeLink}>
+        <button type="button" title={t("removeLink")} onClick={removeLink}>
           🔗✕
         </button>
       </div>

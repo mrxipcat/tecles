@@ -1,0 +1,17 @@
+{
+  "cancelConfirm": "¿Quieres cancelar la reserva de \"{{title}}\"?",
+  "hideDescription": "Oculta la descripción",
+  "showDescription": "Mostra la descripción",
+  "cancelReservation": "Cancela la reserva",
+  "full": "Completo",
+  "reserve": "Reservar",
+  "close": "Cerrar",
+  "selectPlaceholder": "Selecciona {{slot}} del calendario para ver el detalle.",
+  "reservationConfirmed": "Reserva Confirmada",
+  "reservationPending": "Reserva Solicitada",
+  "available": "Disponible",
+  "notAvailable": "No disponible",
+  "freePlaces": "Plazas libres: {{available}} / {{capacity}}",
+  "expiredLabel": "* Sesión Caducada *",
+  "sessionFallback": "Sesión"
+}

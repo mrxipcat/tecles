@@ -1,0 +1,48 @@
+{
+  "common": {
+    "delete": "Eliminar",
+    "create": "Crear"
+  },
+  "page": {
+    "title": "Administración de entidades",
+    "newEntity": "Nueva entidad",
+    "editEntityHeading": "Editar entidad",
+    "nameLabel": "Nombre",
+    "codeLabel": "Código",
+    "aliasLanguageHeader": "Idioma",
+    "aliasSingularHeader": "Singular",
+    "aliasPluralHeader": "Plural",
+    "aliasLanguage": {
+      "ca": "Catalán",
+      "es": "Castellano",
+      "en": "Inglés"
+    },
+    "edit": "Editar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "hideAdmins": "Ocultar administradores",
+    "manageAdmins": "Gestionar administradores",
+    "noEntities": "No hay entidades configuradas.",
+    "createError": "No se ha podido crear la entidad.",
+    "saveError": "No se ha podido guardar la entidad.",
+    "deleteError": "No se ha podido eliminar la entidad."
+  },
+  "adminsPanel": {
+    "heading": "Administradores de la entidad",
+    "usernameLabel": "Usuario",
+    "fullNameLabel": "Nombre completo",
+    "mustChangePasswordHeader": "Debe cambiar la contraseña",
+    "yes": "Sí",
+    "no": "No",
+    "resetPassword": "Restablecer contraseña",
+    "newPasswordLabel": "Nueva contraseña",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "noAdmins": "No hay ningún administrador configurado.",
+    "initialPasswordLabel": "Contraseña inicial",
+    "newAdmin": "Nuevo administrador",
+    "createError": "No se ha podido crear el administrador.",
+    "deleteError": "No se ha podido eliminar el administrador.",
+    "resetError": "No se ha podido restablecer la contraseña."
+  }
+}

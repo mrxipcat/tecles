@@ -62,6 +62,8 @@ def _add_missing_columns() -> None:
     specs = [
         ("sessions", "is_active", f"{bool_type} NOT NULL DEFAULT 1"),
         ("users", "email", "VARCHAR(255) NULL"),
+        ("users", "is_active", f"{bool_type} NOT NULL DEFAULT 1"),
+        ("users", "language", "VARCHAR(10) NULL"),
         ("entities", "smtp_host", "VARCHAR(255) NULL"),
         ("entities", "smtp_port", "INTEGER NULL"),
         ("entities", "smtp_username", "VARCHAR(255) NULL"),
@@ -69,6 +71,10 @@ def _add_missing_columns() -> None:
         ("entities", "smtp_from_email", "VARCHAR(255) NULL"),
         ("entities", "smtp_use_tls", f"{bool_type} NOT NULL DEFAULT 1"),
         ("entities", "email_signature", f"{text_type} NULL"),
+        ("entities", "slot_label_singular_es", "VARCHAR(50) NULL"),
+        ("entities", "slot_label_singular_en", "VARCHAR(50) NULL"),
+        ("entities", "slot_label_plural_es", "VARCHAR(50) NULL"),
+        ("entities", "slot_label_plural_en", "VARCHAR(50) NULL"),
     ]
     with engine.begin() as conn:
         for table, column, ddl in specs:

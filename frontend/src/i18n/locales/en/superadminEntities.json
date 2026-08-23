@@ -1,0 +1,48 @@
+{
+  "common": {
+    "delete": "Delete",
+    "create": "Create"
+  },
+  "page": {
+    "title": "Entity administration",
+    "newEntity": "New entity",
+    "editEntityHeading": "Edit entity",
+    "nameLabel": "Name",
+    "codeLabel": "Code",
+    "aliasLanguageHeader": "Language",
+    "aliasSingularHeader": "Singular",
+    "aliasPluralHeader": "Plural",
+    "aliasLanguage": {
+      "ca": "Catalan",
+      "es": "Spanish",
+      "en": "English"
+    },
+    "edit": "Edit",
+    "close": "Close",
+    "save": "Save",
+    "hideAdmins": "Hide admins",
+    "manageAdmins": "Manage admins",
+    "noEntities": "No entities configured.",
+    "createError": "The entity could not be created.",
+    "saveError": "The entity could not be saved.",
+    "deleteError": "The entity could not be deleted."
+  },
+  "adminsPanel": {
+    "heading": "Entity administrators",
+    "usernameLabel": "Username",
+    "fullNameLabel": "Full name",
+    "mustChangePasswordHeader": "Must change password",
+    "yes": "Yes",
+    "no": "No",
+    "resetPassword": "Reset password",
+    "newPasswordLabel": "New password",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "noAdmins": "No administrators configured.",
+    "initialPasswordLabel": "Initial password",
+    "newAdmin": "New administrator",
+    "createError": "The administrator could not be created.",
+    "deleteError": "The administrator could not be deleted.",
+    "resetError": "The password could not be reset."
+  }
+}

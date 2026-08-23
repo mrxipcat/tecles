@@ -1,0 +1,18 @@
+{
+  "pageHeading": "Groups",
+  "multiroomDisabledMessage": "Enable multi-room mode in the entity settings to manage groups.",
+  "adminHeading": "Group administration",
+  "newRoomButton": "New group",
+  "editRoomHeading": "Edit group",
+  "newRoomHeading": "New group",
+  "nameLabel": "Name",
+  "saveChangesButton": "Save changes",
+  "createButton": "Create",
+  "closeButton": "Close",
+  "tableNameHeader": "Name",
+  "editButton": "Edit",
+  "deleteButton": "Delete",
+  "emptyState": "No groups configured.",
+  "errorSaveFailed": "Could not save the group.",
+  "errorDeleteFailed": "Could not delete the group."
+}

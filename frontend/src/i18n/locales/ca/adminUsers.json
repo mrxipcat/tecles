@@ -1,0 +1,79 @@
+{
+  "title": "Administració d'usuaris",
+  "newUser": "Nou usuari",
+  "errors": {
+    "saveUser": "No s'ha pogut desar l'usuari.",
+    "deleteUser": "No s'ha pogut eliminar l'usuari.",
+    "updateUser": "No s'ha pogut actualitzar l'usuari.",
+    "bulkUpdateUsers": "No s'ha pogut actualitzar els usuaris.",
+    "bulkCancelReservations": "No s'han pogut cancel·lar les reserves.",
+    "bulkDeleteUsers": "No s'han pogut eliminar els usuaris.",
+    "addRoom": "No s'ha pogut afegir el grup.",
+    "removeRoom": "No s'ha pogut eliminar el grup.",
+    "resetPassword": "No s'ha pogut reiniciar la contrasenya."
+  },
+  "confirms": {
+    "bulkCancelReservations": "Vols cancel·lar totes les reserves (pendents i confirmades) dels usuaris seleccionats?",
+    "bulkDelete": "Vols eliminar els {{count}} usuaris seleccionats? Aquesta acció no es pot desfer i cancel·larà silenciosament totes les seves reserves.",
+    "bulkRemoveRoom": "Vols eliminar els usuaris seleccionats del grup \"{{roomName}}\"? Es cancel·laran les seves reserves (pendents i confirmades) en sessions d'aquest grup.",
+    "defaultRoomName": "aquest grup"
+  },
+  "form": {
+    "editTitle": "Editar usuari",
+    "newTitle": "Nou usuari",
+    "username": "Nom d'usuari",
+    "fullName": "Nom complet",
+    "email": "Correu electrònic",
+    "role": "Rol",
+    "roleUser": "Usuari",
+    "roleAdmin": "Administrador",
+    "visibleRooms": "Grups visibles (cap seleccionat = tots)",
+    "initialPassword": "Contrasenya inicial",
+    "initialPasswordInfo": "L'usuari haurà de canviar-la en el primer inici de sessió.",
+    "active": "Actiu (pot accedir al portal)",
+    "saveChanges": "Desar canvis",
+    "create": "Crear",
+    "close": "Tancar"
+  },
+  "reservationsSection": {
+    "title": "Reserves d'aquest usuari"
+  },
+  "bulk": {
+    "title": "Accions ràpides sobre usuaris sel·leccionats ({{count}})",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "cancelReservations": "Cancel·lar reserves",
+    "deleteUsers": "Eliminar usuaris",
+    "group": "Grup",
+    "selectGroup": "Selecciona un grup",
+    "addToGroup": "Afegir al grup",
+    "removeFromGroup": "Eliminar del grup"
+  },
+  "table": {
+    "user": "Usuari",
+    "fullName": "Nom complet",
+    "email": "Correu electrònic",
+    "role": "Rol",
+    "visibleRooms": "Grups visibles",
+    "active": "Actiu",
+    "mustChangePassword": "Ha de canviar contrasenya",
+    "yes": "Sí",
+    "no": "No",
+    "allRooms": "Totes"
+  },
+  "actions": {
+    "edit": "Editar",
+    "resetPassword": "Reiniciar contrasenya",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "delete": "Esborrar",
+    "hideReservations": "Amagar reserves",
+    "viewReservations": "Veure reserves"
+  },
+  "resetForm": {
+    "newPassword": "Contrasenya nova",
+    "confirm": "Confirmar",
+    "cancel": "Cancel·lar"
+  },
+  "empty": "No hi ha usuaris configurats."
+}

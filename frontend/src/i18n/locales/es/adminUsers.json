@@ -1,0 +1,79 @@
+{
+  "title": "Administración de usuarios",
+  "newUser": "Nuevo usuario",
+  "errors": {
+    "saveUser": "No se ha podido guardar el usuario.",
+    "deleteUser": "No se ha podido eliminar el usuario.",
+    "updateUser": "No se ha podido actualizar el usuario.",
+    "bulkUpdateUsers": "No se han podido actualizar los usuarios.",
+    "bulkCancelReservations": "No se han podido cancelar las reservas.",
+    "bulkDeleteUsers": "No se han podido eliminar los usuarios.",
+    "addRoom": "No se ha podido añadir el grupo.",
+    "removeRoom": "No se ha podido eliminar el grupo.",
+    "resetPassword": "No se ha podido reiniciar la contraseña."
+  },
+  "confirms": {
+    "bulkCancelReservations": "¿Quieres cancelar todas las reservas (pendientes y confirmadas) de los usuarios seleccionados?",
+    "bulkDelete": "¿Quieres eliminar los {{count}} usuarios seleccionados? Esta acción no se puede deshacer y cancelará silenciosamente todas sus reservas.",
+    "bulkRemoveRoom": "¿Quieres eliminar a los usuarios seleccionados del grupo \"{{roomName}}\"? Se cancelarán sus reservas (pendientes y confirmadas) en sesiones de este grupo.",
+    "defaultRoomName": "este grupo"
+  },
+  "form": {
+    "editTitle": "Editar usuario",
+    "newTitle": "Nuevo usuario",
+    "username": "Nombre de usuario",
+    "fullName": "Nombre completo",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "roleUser": "Usuario",
+    "roleAdmin": "Administrador",
+    "visibleRooms": "Grupos visibles (ninguno seleccionado = todos)",
+    "initialPassword": "Contraseña inicial",
+    "initialPasswordInfo": "El usuario deberá cambiarla en el primer inicio de sesión.",
+    "active": "Activo (puede acceder al portal)",
+    "saveChanges": "Guardar cambios",
+    "create": "Crear",
+    "close": "Cerrar"
+  },
+  "reservationsSection": {
+    "title": "Reservas de este usuario"
+  },
+  "bulk": {
+    "title": "Acciones rápidas sobre usuarios seleccionados ({{count}})",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "cancelReservations": "Cancelar reservas",
+    "deleteUsers": "Eliminar usuarios",
+    "group": "Grupo",
+    "selectGroup": "Selecciona un grupo",
+    "addToGroup": "Añadir al grupo",
+    "removeFromGroup": "Eliminar del grupo"
+  },
+  "table": {
+    "user": "Usuario",
+    "fullName": "Nombre completo",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "visibleRooms": "Grupos visibles",
+    "active": "Activo",
+    "mustChangePassword": "Debe cambiar la contraseña",
+    "yes": "Sí",
+    "no": "No",
+    "allRooms": "Todas"
+  },
+  "actions": {
+    "edit": "Editar",
+    "resetPassword": "Reiniciar contraseña",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "delete": "Eliminar",
+    "hideReservations": "Ocultar reservas",
+    "viewReservations": "Ver reservas"
+  },
+  "resetForm": {
+    "newPassword": "Contraseña nueva",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "empty": "No hay usuarios configurados."
+}

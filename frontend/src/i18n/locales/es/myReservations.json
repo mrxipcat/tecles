@@ -1,0 +1,31 @@
+{
+  "title": "Mis reservas",
+  "downloadPdf": "Descargar PDF",
+  "sendEmail": "Enviármelo por correo",
+  "confirmCancel": "¿Quieres cancelar la reserva de \"{{title}}\"?",
+  "cancelError": "No se ha podido cancelar la reserva.",
+  "sendEmailError": "No se ha podido enviar el correo.",
+  "sessionFallback": "Sesión",
+  "status": {
+    "pending": "Pendiente",
+    "confirmed": "Confirmada",
+    "rejected": "Rechazada",
+    "cancelled": "Cancelada",
+    "cancelled_by_admin": "Cancelada por el organizador"
+  },
+  "columns": {
+    "date": "Fecha",
+    "schedule": "Horario",
+    "status": "Estado",
+    "requested": "Solicitada",
+    "confirmed": "Confirmada"
+  },
+  "pdf": {
+    "subtitle": "Mis reservas — {{userName}}",
+    "printedAt": "Impreso el {{date}}",
+    "fileName": "mis-reservas.pdf"
+  },
+  "addToCalendar": "Añadir al calendario",
+  "cancelReservation": "Cancelar la reserva",
+  "empty": "No tienes ninguna reserva."
+}

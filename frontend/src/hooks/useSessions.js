@@ -71,7 +71,7 @@ export function useSessions(entityId, visibleRoomIds) {
     const filtered = activeRoomIds ? allSessions.filter((s) => activeRoomIds.has(s.room_id)) : allSessions;
     // Amb el filtre reduït a una sola sala, repetir-ne el nom al títol és redundant.
     if (activeRoomIds && activeRoomIds.size === 1) {
-      return filtered.map((s) => ({ ...s, display_title: s.title || "(sense títol)" }));
+      return filtered.map((s) => ({ ...s, display_title: s.title || s.room_name || "(sense títol)" }));
     }
     return filtered;
   }, [allSessions, activeRoomIds]);

@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "./Button.jsx";
 import { CheckIcon, KeyIcon, PlusIcon, TrashIcon, XIcon } from "./icons.jsx";
@@ -6,6 +7,7 @@ import { CheckIcon, KeyIcon, PlusIcon, TrashIcon, XIcon } from "./icons.jsx";
 const EMPTY_FORM = { username: "", full_name: "", initial_password: "" };
 
 export default function SuperadminEntityAdminsPanel({ entityId }) {
+  const { t } = useTranslation("superadminEntities");
   const [admins, setAdmins] = useState([]);
   const [form, setForm] = useState(null);
   const [resetId, setResetId] = useState(null);
@@ -33,7 +35,7 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
       setForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut crear l'administrador.");
+      setError(err.response?.data?.detail || t("adminsPanel.createError"));
     }
   }
 
@@ -43,7 +45,7 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
       await client.delete(`/superadmin/admins/${userId}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut eliminar l'administrador.");
+      setError(err.response?.data?.detail || t("adminsPanel.deleteError"));
     }
   }
 
@@ -62,20 +64,20 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
       setResetPassword("");
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut reiniciar la contrasenya.");
+      setError(err.response?.data?.detail || t("adminsPanel.resetError"));
     }
   }
 
   return (
     <div className="reservations-panel">
       {error && <p className="error">{error}</p>}
-      <h4>Administradors de l'entitat</h4>
+      <h4>{t("adminsPanel.heading")}</h4>
       <table>
         <thead>
           <tr>
-            <th>Usuari</th>
-            <th>Nom complet</th>
-            <th>Ha de canviar contrasenya</th>
+            <th>{t("adminsPanel.usernameLabel")}</th>
+            <th>{t("adminsPanel.fullNameLabel")}</th>
+            <th>{t("adminsPanel.mustChangePasswordHeader")}</th>
             <th></th>
           </tr>
         </thead>
@@ -85,14 +87,14 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
               <tr>
                 <td>{admin.username}</td>
                 <td>{admin.full_name}</td>
-                <td>{admin.must_change_password ? "Sí" : "No"}</td>
+                <td>{admin.must_change_password ? t("adminsPanel.yes") : t("adminsPanel.no")}</td>
                 <td>
                   <div className="table-actions">
                     <Button icon={KeyIcon} onClick={() => handleResetToggle(admin.id)}>
-                      Reiniciar contrasenya
+                      {t("adminsPanel.resetPassword")}
                     </Button>
                     <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(admin.id)}>
-                      Esborrar
+                      {t("common.delete")}
                     </Button>
                   </div>
                 </td>
@@ -102,7 +104,7 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
                   <td colSpan={4}>
                     <form className="inline-form" onSubmit={(e) => handleResetSubmit(e, admin.id)}>
                       <label>
-                        Contrasenya nova
+                        {t("adminsPanel.newPasswordLabel")}
                         <input
                           type="text"
                           value={resetPassword}
@@ -111,10 +113,10 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
                         />
                       </label>
                       <Button type="submit" icon={CheckIcon} variant="primary">
-                        Confirmar
+                        {t("adminsPanel.confirm")}
                       </Button>
                       <Button icon={XIcon} onClick={() => setResetId(null)}>
-                        Cancel·lar
+                        {t("adminsPanel.cancel")}
                       </Button>
                     </form>
                   </td>
@@ -124,7 +126,7 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
           ))}
           {admins.length === 0 && (
             <tr>
-              <td colSpan={4}>Cap administrador configurat.</td>
+              <td colSpan={4}>{t("adminsPanel.noAdmins")}</td>
             </tr>
           )}
         </tbody>
@@ -133,15 +135,15 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
       {form ? (
         <form className="inline-form" onSubmit={handleSubmit}>
           <label>
-            Usuari
+            {t("adminsPanel.usernameLabel")}
             <input value={form.username} onChange={(e) => handleChange("username", e.target.value)} required />
           </label>
           <label>
-            Nom complet
+            {t("adminsPanel.fullNameLabel")}
             <input value={form.full_name} onChange={(e) => handleChange("full_name", e.target.value)} />
           </label>
           <label>
-            Contrasenya inicial
+            {t("adminsPanel.initialPasswordLabel")}
             <input
               type="text"
               value={form.initial_password}
@@ -150,15 +152,15 @@ export default function SuperadminEntityAdminsPanel({ entityId }) {
             />
           </label>
           <Button type="submit" icon={PlusIcon} variant="primary">
-            Crear
+            {t("common.create")}
           </Button>
           <Button icon={XIcon} onClick={() => setForm(null)}>
-            Cancel·lar
+            {t("adminsPanel.cancel")}
           </Button>
         </form>
       ) : (
         <Button icon={PlusIcon} variant="primary" onClick={() => setForm(EMPTY_FORM)}>
-          Nou administrador
+          {t("adminsPanel.newAdmin")}
         </Button>
       )}
     </div>

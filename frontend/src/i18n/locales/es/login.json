@@ -1,0 +1,10 @@
+{
+  "title": "Entrar",
+  "titleWithEntity": "Entrar a {{entityName}}",
+  "entityCode": "Código de entidad",
+  "username": "Nombre de usuario",
+  "password": "Contraseña",
+  "submit": "Entrar",
+  "genericError": "Error al iniciar sesión",
+  "buildInfo": "Versión {{version}} · Desplegado el {{date}}"
+}

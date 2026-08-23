@@ -1,0 +1,10 @@
+{
+  "bold": "Bold",
+  "italic": "Italic",
+  "underline": "Underline",
+  "unorderedList": "Bullet list",
+  "orderedList": "Numbered list",
+  "insertLink": "Insert a link",
+  "removeLink": "Remove the link",
+  "linkUrlPrompt": "Link URL (https://...)"
+}

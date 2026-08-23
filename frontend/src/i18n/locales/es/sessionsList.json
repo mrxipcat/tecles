@@ -1,0 +1,6 @@
+{
+  "title": "{{plural}} disponibles",
+  "refresh": "Actualizar",
+  "sessionsFallback": "Sesiones",
+  "emptyState": "No hay {{plural}} disponibles."
+}

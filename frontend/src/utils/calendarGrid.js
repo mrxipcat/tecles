@@ -1,9 +1,12 @@
-const CATALAN_MONTHS = [
-  "gener", "febrer", "març", "abril", "maig", "juny",
-  "juliol", "agost", "setembre", "octubre", "novembre", "desembre",
-];
+import i18n from "../i18n/index.js";
 
-export const WEEKDAY_LABELS = ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"];
+// 2024-01-01 és un dilluns: es fa servir com a referència per generar noms de
+// dia en l'ordre Dilluns→Diumenge amb el locale actiu, sense mantenir una
+// traducció manual per idioma.
+export function getWeekdayLabels(locale = i18n.language) {
+  const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  return Array.from({ length: 7 }, (_, i) => formatter.format(new Date(2024, 0, 1 + i)));
+}
 
 export function toISODate(date) {
   const y = date.getFullYear();
@@ -45,9 +48,24 @@ export function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-export function formatRangeLabel(referenceDate, granularity) {
+export function isBeforeDay(a, b) {
+  const aDate = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const bDate = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return aDate < bDate;
+}
+
+// Capitalitza la primera lletra de cada paraula (incloent-hi després d'un
+// apòstrof, com a "d'Agost"): els noms de mes d'`Intl` venen en minúscules
+// per a ca/es, i `text-transform: capitalize` de CSS no ho fa bé amb
+// apòstrofs, així que ho resolem aquí a nivell de text.
+function capitalizeWords(text) {
+  return text.replace(/(^|[^\p{L}])(\p{L})/gu, (_, boundary, letter) => boundary + letter.toUpperCase());
+}
+
+export function formatRangeLabel(referenceDate, granularity, locale = i18n.language) {
+  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
   if (granularity === "month") {
-    return `${CATALAN_MONTHS[referenceDate.getMonth()]} ${referenceDate.getFullYear()}`;
+    return capitalizeWords(`${monthFormatter.format(referenceDate)} ${referenceDate.getFullYear()}`);
   }
   const days = buildWeekDays(referenceDate);
   const start = days[0];
@@ -55,7 +73,11 @@ export function formatRangeLabel(referenceDate, granularity) {
   const sameMonth = start.getMonth() === end.getMonth();
   const startLabel = sameMonth
     ? `${start.getDate()}`
-    : `${start.getDate()} de ${CATALAN_MONTHS[start.getMonth()]}`;
-  const endLabel = `${end.getDate()} de ${CATALAN_MONTHS[end.getMonth()]} de ${end.getFullYear()}`;
-  return `Setmana del ${startLabel} al ${endLabel}`;
+    : i18n.t("calendar:dayMonth", { day: start.getDate(), month: monthFormatter.format(start) });
+  const endLabel = i18n.t("calendar:dayMonthYear", {
+    day: end.getDate(),
+    month: monthFormatter.format(end),
+    year: end.getFullYear(),
+  });
+  return capitalizeWords(i18n.t("calendar:weekRange", { start: startLabel, end: endLabel }));
 }

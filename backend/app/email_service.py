@@ -15,23 +15,10 @@ from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from app.models import Entity, Reservation
+from app.models import Entity, Reservation, ReservationStatus, User
+from app.translations import t
 
 logger = logging.getLogger(__name__)
-
-ACTION_LABELS = {
-    "requested": "Sol·licitud de reserva registrada",
-    "confirmed": "Reserva confirmada",
-    "cancelled_by_admin": "Reserva cancel·lada pel organitzador",
-    "cancelled_by_user": "Reserva cancel·lada",
-}
-
-_INTRO_TEXT = {
-    "requested": "S'ha registrat la teva sol·licitud de reserva. Rebràs un altre correu quan es confirmi.",
-    "confirmed": "La teva reserva ha estat confirmada.",
-    "cancelled_by_admin": "L'organitzador ha cancel·lat la teva reserva.",
-    "cancelled_by_user": "Has cancel·lat la teva reserva.",
-}
 
 
 class EmailError(Exception):
@@ -133,27 +120,30 @@ def _reservation_email_body(reservation: Reservation, event: str) -> str:
     session = reservation.session
     entity = session.entity
     user = reservation.user
+    lang = user.language
     greeting = html.escape(user.full_name or user.username)
     title = html.escape(reservation.session_title)
     date_str = session.date.strftime("%d/%m/%Y")
     start_str = session.start_time.strftime("%H:%M")
     end_str = session.end_time.strftime("%H:%M")
-    label = html.escape(entity.slot_label_singular)
+    label = html.escape(entity.slot_label(lang))
 
     return (
-        f"<p>Hola {greeting},</p>"
-        f"<p>{_INTRO_TEXT[event]}</p>"
+        f"<p>{t(lang, 'greeting', name=greeting)}</p>"
+        f"<p>{t(lang, f'intro_{event}')}</p>"
         "<ul>"
         f"<li><strong>{label}:</strong> {title}</li>"
-        f"<li><strong>Data:</strong> {date_str}</li>"
-        f"<li><strong>Horari:</strong> {start_str} - {end_str}</li>"
+        f"<li><strong>{t(lang, 'label_date')}</strong> {date_str}</li>"
+        f"<li><strong>{t(lang, 'label_time')}</strong> {start_str} - {end_str}</li>"
         "</ul>"
     )
 
 
 def prepare_reservation_email(reservation: Reservation, event: str) -> PreparedEmail | None:
-    """`event` és una clau d'`ACTION_LABELS`. Retorna `None` si l'usuari no té correu
-    o l'entitat no té l'enviament configurat (comprovat dins `prepare_email`)."""
+    """`event` és "requested"/"confirmed"/"cancelled_by_admin"/"cancelled_by_user"
+    (claus `action_*`/`intro_*` de `app/translations.py`). Retorna `None` si
+    l'usuari no té correu o l'entitat no té l'enviament configurat (comprovat
+    dins `prepare_email`)."""
     user = reservation.user
     if not user.email:
         return None
@@ -161,6 +151,39 @@ def prepare_reservation_email(reservation: Reservation, event: str) -> PreparedE
     return prepare_email(
         entity,
         user.email,
-        ACTION_LABELS[event],
+        t(user.language, f"action_{event}"),
         _reservation_email_body(reservation, event),
     )
+
+
+def _reservation_list_item(reservation: Reservation) -> str:
+    return (
+        "<li>"
+        f"{html.escape(reservation.session_title)} — "
+        f"{reservation.session_date.strftime('%d/%m/%Y')} "
+        f"{reservation.session_start_time.strftime('%H:%M')}-{reservation.session_end_time.strftime('%H:%M')}"
+        "</li>"
+    )
+
+
+def build_confirmed_reservations_email_body(user: User, reservations: list[Reservation]) -> str:
+    """Cos de correu de "Enviar-m'ho per correu" a `MyReservationsPage.jsx`: llistat
+    en text (no PDF) de les reserves confirmades i pendents de confirmació de l'usuari,
+    en seccions separades perquè quedi clar quines encara no estan confirmades."""
+    lang = user.language
+    greeting = html.escape(user.full_name or user.username)
+    confirmed = [r for r in reservations if r.status == ReservationStatus.CONFIRMED]
+    pending = [r for r in reservations if r.status == ReservationStatus.PENDING]
+
+    if not confirmed and not pending:
+        sections = f"<p>{t(lang, 'my_reservations_empty')}</p>"
+    else:
+        sections = ""
+        if confirmed:
+            rows = "".join(_reservation_list_item(r) for r in confirmed)
+            sections += f"<p>{t(lang, 'my_reservations_confirmed_header')}</p><ul>{rows}</ul>"
+        if pending:
+            rows = "".join(_reservation_list_item(r) for r in pending)
+            sections += f"<p>{t(lang, 'my_reservations_pending_header')}</p><ul>{rows}</ul>"
+
+    return f"<p>{t(lang, 'greeting', name=greeting)}</p><p>{t(lang, 'my_reservations_intro')}</p>{sections}"

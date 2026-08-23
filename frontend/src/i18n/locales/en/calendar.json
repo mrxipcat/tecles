@@ -1,0 +1,14 @@
+{
+  "dayMonth": "{{month}} {{day}}",
+  "dayMonthYear": "{{month}} {{day}}, {{year}}",
+  "weekRange": "Week of {{start}} to {{end}}",
+  "title": "{{plural}} calendar",
+  "refresh": "Refresh",
+  "previous": "Previous",
+  "today": "Today",
+  "next": "Next",
+  "week": "Week",
+  "month": "Month",
+  "filterByRoom": "Filter by {{room}}",
+  "sessionsFallback": "Sessions"
+}

@@ -24,6 +24,8 @@ def get_current_user(
     user = db.get(User, payload.get("user_id"))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuari no trobat")
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Aquest compte ha estat desactivat")
 
     return user
 
@@ -51,4 +53,7 @@ def get_current_user_optional(
     if not payload:
         return None
 
-    return db.get(User, payload.get("user_id"))
+    user = db.get(User, payload.get("user_id"))
+    if user and not user.is_active:
+        return None
+    return user

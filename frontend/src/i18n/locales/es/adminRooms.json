@@ -1,0 +1,18 @@
+{
+  "pageHeading": "Grupos",
+  "multiroomDisabledMessage": "Activa el modo multisala en la configuración de la entidad para gestionar grupos.",
+  "adminHeading": "Administración de grupos",
+  "newRoomButton": "Nuevo grupo",
+  "editRoomHeading": "Editar grupo",
+  "newRoomHeading": "Nuevo grupo",
+  "nameLabel": "Nombre",
+  "saveChangesButton": "Guardar cambios",
+  "createButton": "Crear",
+  "closeButton": "Cerrar",
+  "tableNameHeader": "Nombre",
+  "editButton": "Editar",
+  "deleteButton": "Eliminar",
+  "emptyState": "No hay grupos configurados.",
+  "errorSaveFailed": "No se ha podido guardar el grupo.",
+  "errorDeleteFailed": "No se ha podido eliminar el grupo."
+}

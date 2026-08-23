@@ -1,0 +1,48 @@
+{
+  "common": {
+    "delete": "Esborrar",
+    "create": "Crear"
+  },
+  "page": {
+    "title": "Administració d'entitats",
+    "newEntity": "Nova entitat",
+    "editEntityHeading": "Editar entitat",
+    "nameLabel": "Nom",
+    "codeLabel": "Codi",
+    "aliasLanguageHeader": "Idioma",
+    "aliasSingularHeader": "Singular",
+    "aliasPluralHeader": "Plural",
+    "aliasLanguage": {
+      "ca": "Català",
+      "es": "Castellà",
+      "en": "Anglès"
+    },
+    "edit": "Editar",
+    "close": "Tancar",
+    "save": "Desar",
+    "hideAdmins": "Amagar admins",
+    "manageAdmins": "Gestionar admins",
+    "noEntities": "No hi ha entitats configurades.",
+    "createError": "No s'ha pogut crear l'entitat.",
+    "saveError": "No s'ha pogut desar l'entitat.",
+    "deleteError": "No s'ha pogut eliminar l'entitat."
+  },
+  "adminsPanel": {
+    "heading": "Administradors de l'entitat",
+    "usernameLabel": "Usuari",
+    "fullNameLabel": "Nom complet",
+    "mustChangePasswordHeader": "Ha de canviar contrasenya",
+    "yes": "Sí",
+    "no": "No",
+    "resetPassword": "Reiniciar contrasenya",
+    "newPasswordLabel": "Contrasenya nova",
+    "confirm": "Confirmar",
+    "cancel": "Cancel·lar",
+    "noAdmins": "Cap administrador configurat.",
+    "initialPasswordLabel": "Contrasenya inicial",
+    "newAdmin": "Nou administrador",
+    "createError": "No s'ha pogut crear l'administrador.",
+    "deleteError": "No s'ha pogut eliminar l'administrador.",
+    "resetError": "No s'ha pogut reiniciar la contrasenya."
+  }
+}

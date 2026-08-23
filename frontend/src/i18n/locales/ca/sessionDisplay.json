@@ -1,0 +1,17 @@
+{
+  "cancelConfirm": "Vols cancel·lar la reserva de \"{{title}}\"?",
+  "hideDescription": "Amaga la descripció",
+  "showDescription": "Mostra la descripció",
+  "cancelReservation": "Cancel·la la reserva",
+  "full": "Completa",
+  "reserve": "Reservar",
+  "close": "Tanca",
+  "selectPlaceholder": "Selecciona {{slot}} del calendari per veure'n el detall.",
+  "reservationConfirmed": "Reserva Confirmada",
+  "reservationPending": "Reserva Sol·licitada",
+  "available": "Disponible",
+  "notAvailable": "No disponible",
+  "freePlaces": "Places lliures: {{available}} / {{capacity}}",
+  "expiredLabel": "* Sessió Caducada *",
+  "sessionFallback": "Sessió"
+}

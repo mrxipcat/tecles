@@ -1,0 +1,77 @@
+"""Traduccions dels textos generats pel backend (cossos de correu). Independent
+de la internacionalització del frontend (`frontend/src/i18n/`); aquí l'idioma
+ve del destinatari (`User.language`) i no hi ha detecció de navegador."""
+
+DEFAULT_LANGUAGE = "ca"
+
+TRANSLATIONS: dict[str, dict[str, str]] = {
+    "ca": {
+        "action_requested": "Sol·licitud de reserva registrada",
+        "action_confirmed": "Reserva confirmada",
+        "action_cancelled_by_admin": "Reserva cancel·lada pel organitzador",
+        "action_cancelled_by_user": "Reserva cancel·lada",
+        "intro_requested": "S'ha registrat la teva sol·licitud de reserva. Rebràs un altre correu quan es confirmi.",
+        "intro_confirmed": "La teva reserva ha estat confirmada.",
+        "intro_cancelled_by_admin": "L'organitzador ha cancel·lat la teva reserva.",
+        "intro_cancelled_by_user": "Has cancel·lat la teva reserva.",
+        "greeting": "Hola {name},",
+        "label_date": "Data:",
+        "label_time": "Horari:",
+        "my_reservations_subject": "Llistat de reserves",
+        "my_reservations_intro": "Aquest és el llistat de les teves reserves:",
+        "my_reservations_empty": "Ara mateix no tens cap reserva confirmada ni pendent de confirmació.",
+        "my_reservations_confirmed_header": "Reserves confirmades:",
+        "my_reservations_pending_header": "Reserves pendents de confirmació:",
+        "test_email_subject": "Correu de prova",
+        "test_email_body_1": "Aquest és un correu de prova de la configuració SMTP del portal.",
+        "test_email_body_2": "Si l'has rebut, l'enviament de notificacions per correu funciona correctament.",
+    },
+    "es": {
+        "action_requested": "Solicitud de reserva registrada",
+        "action_confirmed": "Reserva confirmada",
+        "action_cancelled_by_admin": "Reserva cancelada por el organizador",
+        "action_cancelled_by_user": "Reserva cancelada",
+        "intro_requested": "Se ha registrado tu solicitud de reserva. Recibirás otro correo cuando se confirme.",
+        "intro_confirmed": "Tu reserva ha sido confirmada.",
+        "intro_cancelled_by_admin": "El organizador ha cancelado tu reserva.",
+        "intro_cancelled_by_user": "Has cancelado tu reserva.",
+        "greeting": "Hola {name},",
+        "label_date": "Fecha:",
+        "label_time": "Horario:",
+        "my_reservations_subject": "Listado de reservas",
+        "my_reservations_intro": "Este es el listado de tus reservas:",
+        "my_reservations_empty": "Ahora mismo no tienes ninguna reserva confirmada ni pendiente de confirmación.",
+        "my_reservations_confirmed_header": "Reservas confirmadas:",
+        "my_reservations_pending_header": "Reservas pendientes de confirmación:",
+        "test_email_subject": "Correo de prueba",
+        "test_email_body_1": "Este es un correo de prueba de la configuración SMTP del portal.",
+        "test_email_body_2": "Si lo has recibido, el envío de notificaciones por correo funciona correctamente.",
+    },
+    "en": {
+        "action_requested": "Reservation request registered",
+        "action_confirmed": "Reservation confirmed",
+        "action_cancelled_by_admin": "Reservation cancelled by the organizer",
+        "action_cancelled_by_user": "Reservation cancelled",
+        "intro_requested": "Your reservation request has been registered. You'll get another email once it's confirmed.",
+        "intro_confirmed": "Your reservation has been confirmed.",
+        "intro_cancelled_by_admin": "The organizer has cancelled your reservation.",
+        "intro_cancelled_by_user": "You have cancelled your reservation.",
+        "greeting": "Hi {name},",
+        "label_date": "Date:",
+        "label_time": "Time:",
+        "my_reservations_subject": "List of reservations",
+        "my_reservations_intro": "Here is the list of your reservations:",
+        "my_reservations_empty": "You don't currently have any confirmed or pending reservation.",
+        "my_reservations_confirmed_header": "Confirmed reservations:",
+        "my_reservations_pending_header": "Reservations pending confirmation:",
+        "test_email_subject": "Test email",
+        "test_email_body_1": "This is a test email for the portal's SMTP configuration.",
+        "test_email_body_2": "If you received it, email notifications are working correctly.",
+    },
+}
+
+
+def t(lang: str | None, key: str, **kwargs) -> str:
+    table = TRANSLATIONS.get(lang or DEFAULT_LANGUAGE, TRANSLATIONS[DEFAULT_LANGUAGE])
+    text = table.get(key, TRANSLATIONS[DEFAULT_LANGUAGE].get(key, key))
+    return text.format(**kwargs) if kwargs else text

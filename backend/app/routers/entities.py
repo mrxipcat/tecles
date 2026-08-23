@@ -6,6 +6,7 @@ from app.dependencies import get_current_admin
 from app.email_service import EmailError, send_email_now
 from app.models import Entity, User
 from app.sanitize import sanitize_rich_text
+from app.translations import t
 from app.schemas import (
     EntityEmailConfig,
     EntityEmailConfigRead,
@@ -114,13 +115,13 @@ def test_entity_email_config(
 ):
     entity = _get_owned_entity(entity_id, admin, db)
 
+    lang = admin.language
     try:
         send_email_now(
             entity,
             payload.to_email,
-            f"{entity.name}: Correu de prova",
-            "<p>Aquest és un correu de prova de la configuració SMTP del portal.</p>"
-            "<p>Si l'has rebut, l'enviament de notificacions per correu funciona correctament.</p>",
+            f"{entity.name}: {t(lang, 'test_email_subject')}",
+            f"<p>{t(lang, 'test_email_body_1')}</p><p>{t(lang, 'test_email_body_2')}</p>",
         )
     except EmailError as exc:
         return EntityEmailTestResult(success=False, detail=str(exc))

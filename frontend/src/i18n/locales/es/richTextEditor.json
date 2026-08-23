@@ -1,0 +1,10 @@
+{
+  "bold": "Negrita",
+  "italic": "Cursiva",
+  "underline": "Subrayado",
+  "unorderedList": "Lista",
+  "orderedList": "Lista numerada",
+  "insertLink": "Inserta un enlace",
+  "removeLink": "Quita el enlace",
+  "linkUrlPrompt": "URL del enlace (https://...)"
+}

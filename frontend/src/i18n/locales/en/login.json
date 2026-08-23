@@ -1,0 +1,10 @@
+{
+  "title": "Log in",
+  "titleWithEntity": "Log in to {{entityName}}",
+  "entityCode": "Entity code",
+  "username": "Username",
+  "password": "Password",
+  "submit": "Log in",
+  "genericError": "Login error",
+  "buildInfo": "Version {{version}} · Deployed on {{date}}"
+}

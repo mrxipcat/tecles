@@ -1,14 +1,17 @@
+import { useTranslation } from "react-i18next";
 import SessionChip from "./SessionChip.jsx";
-import { WEEKDAY_LABELS, isSameDay, toISODate } from "../utils/calendarGrid.js";
+import { getWeekdayLabels, isBeforeDay, isSameDay, toISODate } from "../utils/calendarGrid.js";
 
 export default function CalendarGrid({ days, sessionsByDate, selectedId, onSelectSession, currentMonth }) {
+  const { i18n } = useTranslation();
   const today = new Date();
+  const weekdayLabels = getWeekdayLabels(i18n.language);
 
   return (
     <div className="calendar">
       <div className="calendar-weekday-header">
-        {WEEKDAY_LABELS.map((label) => (
-          <div key={label} className="calendar-weekday-label">
+        {weekdayLabels.map((label, index) => (
+          <div key={index} className="calendar-weekday-label">
             {label}
           </div>
         ))}
@@ -20,6 +23,7 @@ export default function CalendarGrid({ days, sessionsByDate, selectedId, onSelec
           const cellClasses = ["calendar-cell"];
           if (outsideMonth) cellClasses.push("is-outside-month");
           if (isSameDay(day, today)) cellClasses.push("is-today");
+          if (isBeforeDay(day, today)) cellClasses.push("is-past");
 
           return (
             <div key={toISODate(day)} className={cellClasses.join(" ")}>

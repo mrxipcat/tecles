@@ -1,0 +1,17 @@
+{
+  "pendingHeading": "Sol·licituds pendents",
+  "noPending": "Cap sol·licitud pendent.",
+  "confirmedHeading": "Reserves confirmades",
+  "noConfirmed": "Cap reserva confirmada.",
+  "userColumn": "Usuari",
+  "sessionColumn": "Sessió",
+  "dateColumn": "Data",
+  "scheduleColumn": "Horari",
+  "requestedAtColumn": "Sol·licitat el",
+  "confirmedAtColumn": "Confirmat el",
+  "confirmAction": "Confirmar",
+  "rejectAction": "Rebutjar",
+  "cancelAction": "Cancel·la",
+  "cancelReservationForUser": "Vols cancel·lar la reserva de \"{{name}}\"?",
+  "cancelReservationForSession": "Vols cancel·lar la reserva \"{{title}}\"?"
+}

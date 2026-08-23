@@ -1,0 +1,79 @@
+{
+  "title": "User administration",
+  "newUser": "New user",
+  "errors": {
+    "saveUser": "Could not save the user.",
+    "deleteUser": "Could not delete the user.",
+    "updateUser": "Could not update the user.",
+    "bulkUpdateUsers": "Could not update the users.",
+    "bulkCancelReservations": "Could not cancel the reservations.",
+    "bulkDeleteUsers": "Could not delete the users.",
+    "addRoom": "Could not add the group.",
+    "removeRoom": "Could not remove the group.",
+    "resetPassword": "Could not reset the password."
+  },
+  "confirms": {
+    "bulkCancelReservations": "Do you want to cancel all reservations (pending and confirmed) of the selected users?",
+    "bulkDelete": "Do you want to delete the {{count}} selected users? This action cannot be undone and will silently cancel all their reservations.",
+    "bulkRemoveRoom": "Do you want to remove the selected users from the group \"{{roomName}}\"? Their reservations (pending and confirmed) in sessions of this group will be cancelled.",
+    "defaultRoomName": "this group"
+  },
+  "form": {
+    "editTitle": "Edit user",
+    "newTitle": "New user",
+    "username": "Username",
+    "fullName": "Full name",
+    "email": "Email",
+    "role": "Role",
+    "roleUser": "User",
+    "roleAdmin": "Administrator",
+    "visibleRooms": "Visible groups (none selected = all)",
+    "initialPassword": "Initial password",
+    "initialPasswordInfo": "The user will have to change it on first login.",
+    "active": "Active (can access the portal)",
+    "saveChanges": "Save changes",
+    "create": "Create",
+    "close": "Close"
+  },
+  "reservationsSection": {
+    "title": "This user's reservations"
+  },
+  "bulk": {
+    "title": "Quick actions on selected users ({{count}})",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "cancelReservations": "Cancel reservations",
+    "deleteUsers": "Delete users",
+    "group": "Group",
+    "selectGroup": "Select a group",
+    "addToGroup": "Add to group",
+    "removeFromGroup": "Remove from group"
+  },
+  "table": {
+    "user": "User",
+    "fullName": "Full name",
+    "email": "Email",
+    "role": "Role",
+    "visibleRooms": "Visible groups",
+    "active": "Active",
+    "mustChangePassword": "Must change password",
+    "yes": "Yes",
+    "no": "No",
+    "allRooms": "All"
+  },
+  "actions": {
+    "edit": "Edit",
+    "resetPassword": "Reset password",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "hideReservations": "Hide reservations",
+    "viewReservations": "View reservations"
+  },
+  "resetForm": {
+    "newPassword": "New password",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "empty": "No users configured."
+}

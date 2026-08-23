@@ -1,25 +1,29 @@
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext.jsx";
 import Button from "./Button.jsx";
 import RichTextContent from "./RichTextContent.jsx";
 import { CalendarPlusIcon, CalendarXIcon, XIcon } from "./icons.jsx";
-import { availabilityClass, availabilityText } from "../utils/availability.js";
+import { availabilityClass, availabilityText, isExpiredSession } from "../utils/availability.js";
+import { resolveSlotLabel } from "../utils/entityLabels.js";
 
 export default function SessionDetailPanel({ session, onReserve, onCancel, onClose }) {
+  const { t, i18n } = useTranslation("sessionDisplay");
   const { entity } = useAuth();
-  const singular = entity?.slot_label_singular ?? "Sessió";
+  const singular = resolveSlotLabel(entity?.slot_label_singular, i18n.language) ?? t("sessionFallback");
   const singularLower = singular.toLowerCase();
 
   if (!session) {
     return (
       <p className="calendar-detail-placeholder">
-        Selecciona {singularLower} del calendari per veure'n el detall.
+        {t("selectPlaceholder", { slot: singularLower })}
       </p>
     );
   }
   const full = session.is_available === false;
+  const canReserve = !full && !isExpiredSession(session);
 
   function handleCancelClick() {
-    if (window.confirm(`Vols cancel·lar la reserva de "${session.display_title}"?`)) {
+    if (window.confirm(t("cancelConfirm", { title: session.display_title }))) {
       onCancel(session);
     }
   }
@@ -29,7 +33,7 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
       <div className="session-detail-header">
         <h2>{session.display_title}</h2>
         <Button icon={XIcon} onClick={onClose}>
-          Tanca
+          {t("close")}
         </Button>
       </div>
       <p className="session-card-date">
@@ -41,13 +45,18 @@ export default function SessionDetailPanel({ session, onReserve, onCancel, onClo
         {session.my_reservation_id ? (
           onCancel && (
             <Button icon={CalendarXIcon} variant="danger" onClick={handleCancelClick}>
-              Cancel·la la reserva
+              {t("cancelReservation")}
             </Button>
           )
         ) : (
           onReserve && (
-            <Button icon={CalendarPlusIcon} variant="primary" disabled={full} onClick={() => onReserve(session)}>
-              {full ? "Completa" : "Reservar"}
+            <Button
+              icon={CalendarPlusIcon}
+              variant="primary"
+              disabled={!canReserve}
+              onClick={() => onReserve(session)}
+            >
+              {full ? t("full") : t("reserve")}
             </Button>
           )
         )}

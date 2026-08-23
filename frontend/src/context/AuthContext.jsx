@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import client from "../api/client.js";
+import i18n, { SUPPORTED_LANGUAGES } from "../i18n/index.js";
 
 const STORAGE_KEY = "webaules_auth";
 const AuthContext = createContext(null);
@@ -7,6 +8,20 @@ const AuthContext = createContext(null);
 function loadStored() {
   const raw = localStorage.getItem(STORAGE_KEY);
   return raw ? JSON.parse(raw) : null;
+}
+
+function detectBrowserLanguage() {
+  const candidates = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+  for (const candidate of candidates) {
+    const short = candidate?.slice(0, 2).toLowerCase();
+    if (SUPPORTED_LANGUAGES.includes(short)) return short;
+  }
+  return "ca";
+}
+
+function resolveLanguage(user) {
+  if (user?.language && SUPPORTED_LANGUAGES.includes(user.language)) return user.language;
+  return detectBrowserLanguage();
 }
 
 export function AuthProvider({ children }) {
@@ -21,6 +36,11 @@ export function AuthProvider({ children }) {
     client.get(`/entities/${auth.user.entity_id}`).then(({ data }) => setEntity(data));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.user?.id]);
+
+  useEffect(() => {
+    i18n.changeLanguage(resolveLanguage(auth?.user));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth?.user?.id, auth?.user?.language]);
 
   async function login({ username, entityCode, password }) {
     const { data } = await client.post("/auth/login", {
@@ -45,6 +65,14 @@ export function AuthProvider({ children }) {
     return nextAuth;
   }
 
+  async function updateLanguage(language) {
+    const { data } = await client.patch("/auth/me", { language });
+    const nextAuth = { token: auth.token, user: data };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAuth));
+    setAuth(nextAuth);
+    return nextAuth;
+  }
+
   function logout() {
     localStorage.removeItem(STORAGE_KEY);
     setAuth(null);
@@ -62,6 +90,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     changePassword,
+    updateLanguage,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

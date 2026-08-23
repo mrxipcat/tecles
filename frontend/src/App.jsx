@@ -8,6 +8,7 @@ import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import MyReservationsPage from "./pages/MyReservationsPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 import SessionsCalendarPage from "./pages/SessionsCalendarPage.jsx";
 import SessionsListPage from "./pages/SessionsListPage.jsx";
 import SuperadminEntitiesPage from "./pages/SuperadminEntitiesPage.jsx";
@@ -48,6 +49,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MyReservationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

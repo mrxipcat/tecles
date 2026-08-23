@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import { PencilIcon, PlusIcon, SaveIcon, TrashIcon, XIcon } from "../components/icons.jsx";
@@ -7,6 +8,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 const EMPTY_FORM = { id: null, name: "" };
 
 export default function AdminRoomsPage() {
+  const { t } = useTranslation("adminRooms");
   const { user, entity } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState(null);
@@ -44,7 +46,7 @@ export default function AdminRoomsPage() {
       setForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut desar el grup.");
+      setError(err.response?.data?.detail || t("errorSaveFailed"));
     }
   }
 
@@ -54,15 +56,15 @@ export default function AdminRoomsPage() {
       await client.delete(`/rooms/${roomId}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || "No s'ha pogut eliminar el grup.");
+      setError(err.response?.data?.detail || t("errorDeleteFailed"));
     }
   }
 
   if (entity && !entity.is_multiroom) {
     return (
       <div className="page">
-        <h1>Grups</h1>
-        <p>Activa el mode multisala a la configuració de l'entitat per gestionar grups.</p>
+        <h1>{t("pageHeading")}</h1>
+        <p>{t("multiroomDisabledMessage")}</p>
       </div>
     );
   }
@@ -70,10 +72,10 @@ export default function AdminRoomsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Administració de grups</h1>
+        <h1>{t("adminHeading")}</h1>
         {!form && (
           <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
-            Nou grup
+            {t("newRoomButton")}
           </Button>
         )}
       </div>
@@ -82,52 +84,54 @@ export default function AdminRoomsPage() {
 
       {form && (
         <form className="admin-form" onSubmit={handleSubmit}>
-          <h2>{form.id ? "Editar grup" : "Nou grup"}</h2>
+          <h2>{form.id ? t("editRoomHeading") : t("newRoomHeading")}</h2>
           <label>
-            Nom
+            {t("nameLabel")}
             <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} required />
           </label>
           <div className="admin-form-actions">
             <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
-              {form.id ? "Desar canvis" : "Crear"}
+              {form.id ? t("saveChangesButton") : t("createButton")}
             </Button>
             <Button icon={XIcon} onClick={() => setForm(null)}>
-              Tancar
+              {t("closeButton")}
             </Button>
           </div>
         </form>
       )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rooms.map((room) => (
-            <tr key={room.id}>
-              <td>{room.name}</td>
-              <td>
-                <div className="table-actions">
-                  <Button icon={PencilIcon} onClick={() => handleEdit(room)}>
-                    Editar
-                  </Button>
-                  <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(room.id)}>
-                    Esborrar
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {rooms.length === 0 && (
+      {!form && (
+        <table>
+          <thead>
             <tr>
-              <td colSpan={2}>No hi ha grups configurats.</td>
+              <th>{t("tableNameHeader")}</th>
+              <th></th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rooms.map((room) => (
+              <tr key={room.id}>
+                <td>{room.name}</td>
+                <td>
+                  <div className="table-actions">
+                    <Button icon={PencilIcon} onClick={() => handleEdit(room)}>
+                      {t("editButton")}
+                    </Button>
+                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(room.id)}>
+                      {t("deleteButton")}
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {rooms.length === 0 && (
+              <tr>
+                <td colSpan={2}>{t("emptyState")}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

@@ -1,0 +1,31 @@
+{
+  "title": "Les meves reserves",
+  "downloadPdf": "Descarrega PDF",
+  "sendEmail": "Enviar-m'ho per correu",
+  "confirmCancel": "Vols cancel·lar la reserva de \"{{title}}\"?",
+  "cancelError": "No s'ha pogut cancel·lar la reserva.",
+  "sendEmailError": "No s'ha pogut enviar el correu.",
+  "sessionFallback": "Sessió",
+  "status": {
+    "pending": "Pendent",
+    "confirmed": "Confirmada",
+    "rejected": "Rebutjada",
+    "cancelled": "Cancel·lada",
+    "cancelled_by_admin": "Cancel·lada per l'organitzador"
+  },
+  "columns": {
+    "date": "Data",
+    "schedule": "Horari",
+    "status": "Estat",
+    "requested": "Sol·licitada",
+    "confirmed": "Confirmada"
+  },
+  "pdf": {
+    "subtitle": "Les meves reserves — {{userName}}",
+    "printedAt": "Imprès el {{date}}",
+    "fileName": "les-meves-reserves.pdf"
+  },
+  "addToCalendar": "Afegeix al calendari",
+  "cancelReservation": "Cancel·la la reserva",
+  "empty": "No tens cap reserva."
+}

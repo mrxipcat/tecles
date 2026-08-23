@@ -89,7 +89,7 @@ def delete_room(
 
     has_sessions = db.query(SlotSession).filter(SlotSession.room_id == room_id).first()
     if has_sessions:
-        slot_plural = admin.entity.slot_label_plural.lower()
+        slot_plural = admin.entity.slot_label(admin.language, plural=True).lower()
         raise HTTPException(
             status_code=400,
             detail=f"No es pot esborrar un grup que encara té {slot_plural}",

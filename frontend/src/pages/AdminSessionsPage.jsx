@@ -1,10 +1,13 @@
 import { Fragment, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import {
+  ArrowRightLeftIcon,
   CalendarXIcon,
   CheckIcon,
   ChevronDownIcon,
+  DownloadIcon,
   PencilIcon,
   PlusIcon,
   PowerIcon,
@@ -17,6 +20,8 @@ import RoomFilterBar from "../components/RoomFilterBar.jsx";
 import SessionPackForm from "../components/SessionPackForm.jsx";
 import SessionReservationsPanel from "../components/SessionReservationsPanel.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { isExpiredSession } from "../utils/availability.js";
+import { resolveSlotLabel } from "../utils/entityLabels.js";
 
 const EMPTY_FORM = {
   id: null,
@@ -31,6 +36,7 @@ const EMPTY_FORM = {
 };
 
 export default function AdminSessionsPage() {
+  const { t, i18n } = useTranslation("adminSessions");
   const { user, entity } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -40,10 +46,12 @@ export default function AdminSessionsPage() {
   const [packMessage, setPackMessage] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkRoomId, setBulkRoomId] = useState("");
+  const [bulkCapacityAmount, setBulkCapacityAmount] = useState(1);
   const [error, setError] = useState(null);
 
-  const singular = entity?.slot_label_singular ?? "Sessió";
-  const plural = entity?.slot_label_plural ?? "Sessions";
+  const singular = resolveSlotLabel(entity?.slot_label_singular, i18n.language) ?? t("sessionFallback");
+  const plural = resolveSlotLabel(entity?.slot_label_plural, i18n.language) ?? t("sessionsFallback");
   const isMultiroom = Boolean(entity?.is_multiroom);
 
   async function load() {
@@ -128,7 +136,7 @@ export default function AdminSessionsPage() {
   }
 
   async function handleBulkConfirmPending() {
-    if (!window.confirm("Vols confirmar totes les reserves pendents de les sessions seleccionades?")) {
+    if (!window.confirm(t("confirmBulkConfirmPending"))) {
       return;
     }
     await client.patch("/reservations/bulk-confirm", { session_ids: [...selectedIds] });
@@ -137,7 +145,7 @@ export default function AdminSessionsPage() {
   }
 
   async function handleBulkCancelReservations() {
-    if (!window.confirm("Vols cancel·lar totes les reserves (pendents i confirmades) de les sessions seleccionades?")) {
+    if (!window.confirm(t("confirmBulkCancelReservations"))) {
       return;
     }
     await client.patch("/reservations/bulk-cancel", { session_ids: [...selectedIds] });
@@ -146,12 +154,78 @@ export default function AdminSessionsPage() {
   }
 
   async function handleBulkDelete() {
-    if (!window.confirm(`Vols esborrar les ${selectedIds.size} sessions seleccionades? Aquesta acció no es pot desfer.`)) {
+    if (!window.confirm(t("confirmBulkDelete", { count: selectedIds.size }))) {
       return;
     }
     await client.delete("/sessions/bulk", { data: { session_ids: [...selectedIds] } });
     setSelectedIds(new Set());
     load();
+  }
+
+  async function handleExportXlsx() {
+    setError(null);
+    try {
+      const response = await client.post(
+        "/sessions/export-reservations-xlsx",
+        { session_ids: [...selectedIds] },
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "inscrits.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.response?.data?.detail || t("errorExportXlsx"));
+    }
+  }
+
+  async function handleBulkChangeRoom() {
+    if (!bulkRoomId) return;
+    setError(null);
+    try {
+      await client.patch("/sessions/bulk-room", {
+        session_ids: [...selectedIds],
+        room_id: Number(bulkRoomId),
+      });
+      setBulkRoomId("");
+      setSelectedIds(new Set());
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || t("errorChangeRoom"));
+    }
+  }
+
+  async function handleDeleteExpired() {
+    if (!window.confirm(t("confirmDeleteExpired"))) {
+      return;
+    }
+    setError(null);
+    try {
+      await client.delete("/sessions/expired");
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || t("errorDeleteExpired"));
+    }
+  }
+
+  async function handleBulkAddCapacity() {
+    const amount = Number(bulkCapacityAmount);
+    if (!amount || amount <= 0) return;
+    setError(null);
+    try {
+      await client.patch("/sessions/bulk-add-capacity", {
+        session_ids: [...selectedIds],
+        amount,
+      });
+      setSelectedIds(new Set());
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || t("errorAddCapacity"));
+    }
   }
 
   function handleChange(field, value) {
@@ -173,13 +247,14 @@ export default function AdminSessionsPage() {
 
   function handlePackCreated(count) {
     setPackOpen(false);
-    setPackMessage(`S'han creat ${count} sessions.`);
+    setPackMessage(t("packCreatedMessage", { count, plural }));
     load();
   }
 
   function handleEdit(session) {
     setError(null);
     setPackOpen(false);
+    setSelectedIds(new Set());
     setForm({
       id: session.id,
       title: session.title || "",
@@ -198,7 +273,7 @@ export default function AdminSessionsPage() {
     setError(null);
 
     if (form.end_time <= form.start_time) {
-      setError("L'hora de finalització ha de ser posterior a l'hora d'inici.");
+      setError(t("errorEndTimeBeforeStart"));
       return;
     }
 
@@ -223,7 +298,7 @@ export default function AdminSessionsPage() {
       setForm(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || `No s'ha pogut desar ${singular.toLowerCase()}.`);
+      setError(err.response?.data?.detail || t("errorSaveSession", { singular: singular.toLowerCase() }));
     }
   }
 
@@ -236,49 +311,66 @@ export default function AdminSessionsPage() {
   const columnCount = 8 + (isMultiroom ? 1 : 0) + (showPending ? 1 : 0);
   const visibleSessions =
     isMultiroom && activeRoomIds ? sessions.filter((s) => activeRoomIds.has(s.room_id)) : sessions;
+  const isEditing = Boolean(form) || packOpen;
+  const editingSession = form?.id ? sessions.find((s) => s.id === form.id) : null;
 
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Administració de {plural}</h1>
-        {!form && !packOpen && (
+        <h1>{t("pageHeading", { plural })}</h1>
+        {!isEditing && (
           <div className="table-actions">
             <Button icon={PlusIcon} variant="primary" onClick={handleNew}>
-              Nova {singular}
+              {t("newSessionButton", { singular })}
             </Button>
             <Button icon={PlusIcon} onClick={handleOpenPack}>
-              Nou pack de sessions
+              {t("newPackButton", { plural })}
+            </Button>
+            <Button icon={TrashIcon} variant="danger" onClick={handleDeleteExpired}>
+              {t("deleteExpiredButton")}
             </Button>
           </div>
         )}
       </div>
 
-      {isMultiroom && <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />}
+      {!isEditing && error && <p className="error">{error}</p>}
 
-      {packMessage && <p className="info">{packMessage}</p>}
+      {!isEditing && isMultiroom && <RoomFilterBar rooms={rooms} activeRoomIds={activeRoomIds} onToggle={toggleRoom} />}
+
+      {!isEditing && packMessage && <p className="info">{packMessage}</p>}
 
       {packOpen && (
         <SessionPackForm
           isMultiroom={isMultiroom}
           rooms={rooms}
+          singular={singular}
+          plural={plural}
           onCreated={handlePackCreated}
           onCancel={() => setPackOpen(false)}
         />
       )}
 
       {form && (
+        <Fragment>
         <form className="admin-form" onSubmit={handleSubmit}>
-          <h2>{form.id ? `Editar ${singular}` : `Nova ${singular}`}</h2>
+          <h2>{form.id ? t("formHeadingEdit", { singular }) : t("formHeadingNew", { singular })}</h2>
+          {editingSession && (
+            <p className={`admin-form-status ${editingSession.is_available ? "is-available" : "is-full"}`}>
+              {t("statusConfirmed", { count: editingSession.confirmed_count ?? 0 })}
+              {showPending && t("statusPending", { count: editingSession.pending_count ?? 0 })}
+              {t("statusTotal", { count: editingSession.capacity })}
+            </p>
+          )}
           <label>
-            Títol (opcional)
+            {t("labelTitle")}
             <input value={form.title} onChange={(e) => handleChange("title", e.target.value)} />
           </label>
           {isMultiroom && (
             <label>
-              Grup
+              {t("labelRoom")}
               <select value={form.room_id} onChange={(e) => handleChange("room_id", e.target.value)} required>
                 <option value="" disabled>
-                  Selecciona un grup
+                  {t("selectRoomPlaceholder")}
                 </option>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -289,20 +381,20 @@ export default function AdminSessionsPage() {
             </label>
           )}
           <label>
-            Descripció
+            {t("labelDescription")}
             <RichTextEditor
               value={form.description}
               onChange={(html) => handleChange("description", html)}
-              placeholder="Descripció (opcional)"
+              placeholder={t("descriptionPlaceholder")}
             />
           </label>
           <label>
-            Data
+            {t("labelDate")}
             <input type="date" value={form.date} onChange={(e) => handleChange("date", e.target.value)} required />
           </label>
           <div className="form-row">
             <label>
-              Hora d'inici
+              {t("labelStartTime")}
               <input
                 type="time"
                 value={form.start_time}
@@ -311,7 +403,7 @@ export default function AdminSessionsPage() {
               />
             </label>
             <label>
-              Hora de final
+              {t("labelEndTime")}
               <input
                 type="time"
                 value={form.end_time}
@@ -322,7 +414,7 @@ export default function AdminSessionsPage() {
           </div>
           {error && <p className="error">{error}</p>}
           <label>
-            Places
+            {t("labelCapacity")}
             <input
               type="number"
               min="1"
@@ -337,125 +429,185 @@ export default function AdminSessionsPage() {
               checked={form.is_active}
               onChange={(e) => handleChange("is_active", e.target.checked)}
             />
-            Actiu (visible als usuaris)
+            {t("labelActive")}
           </label>
           <div className="admin-form-actions">
             <Button type="submit" icon={form.id ? SaveIcon : PlusIcon} variant="primary">
-              {form.id ? "Desar canvis" : "Crear"}
+              {form.id ? t("submitSave") : t("submitCreate")}
             </Button>
             <Button icon={XIcon} onClick={() => setForm(null)}>
-              Tancar
+              {t("closeButton")}
             </Button>
           </div>
         </form>
+        {form.id && entity && (
+          <div className="admin-form-reservations">
+            <h3>{t("reservationsHeading", { singular: singular.toLowerCase() })}</h3>
+            <SessionReservationsPanel
+              sessionId={form.id}
+              autoConfirm={entity.auto_confirm_reservations}
+              onChanged={load}
+            />
+          </div>
+        )}
+        </Fragment>
       )}
 
-      {selectedIds.size > 0 && (
+      {!isEditing && selectedIds.size > 0 && (
         <div className="bulk-actions-bar">
-          <h3>Accions ràpides sobre sessions sel·leccionades ({selectedIds.size})</h3>
+          <h3>{t("bulkActionsHeading", { count: selectedIds.size })}</h3>
           <div className="table-actions">
             <Button icon={CheckIcon} variant="primary" onClick={() => handleBulkSetActive(true)}>
-              Activar
+              {t("activateButton")}
             </Button>
             <Button icon={XIcon} onClick={() => handleBulkSetActive(false)}>
-              Desactivar
+              {t("deactivateButton")}
             </Button>
             <Button icon={CheckIcon} onClick={handleBulkConfirmPending}>
-              Confirmar pendents
+              {t("confirmPendingButton")}
             </Button>
             <Button icon={CalendarXIcon} onClick={handleBulkCancelReservations}>
-              Cancel·lar reserves
+              {t("cancelReservationsButton")}
             </Button>
             <Button icon={TrashIcon} variant="danger" onClick={handleBulkDelete}>
-              Esborrar
+              {t("deleteButton")}
             </Button>
+            <Button icon={DownloadIcon} onClick={handleExportXlsx}>
+              {t("exportXlsxButton")}
+            </Button>
+          </div>
+          {isMultiroom && (
+            <div className="table-actions">
+              <div className="inline-form">
+                <label>
+                  {t("changeRoomLabel")}
+                  <select value={bulkRoomId} onChange={(e) => setBulkRoomId(e.target.value)}>
+                    <option value="">{t("selectRoomPlaceholder")}</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Button icon={ArrowRightLeftIcon} onClick={handleBulkChangeRoom} disabled={!bulkRoomId}>
+                  {t("applyButton")}
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="table-actions">
+            <div className="inline-form">
+              <label>
+                {t("addCapacityLabel")}
+                <input
+                  type="number"
+                  min="1"
+                  className="input-compact"
+                  value={bulkCapacityAmount}
+                  onChange={(e) => setBulkCapacityAmount(e.target.value)}
+                />
+              </label>
+              <Button icon={PlusIcon} onClick={handleBulkAddCapacity}>
+                {t("addCapacityButton")}
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={visibleSessions.length > 0 && selectedIds.size === visibleSessions.length}
-                onChange={toggleSelectAll}
-              />
-            </th>
-            <th>Títol</th>
-            {isMultiroom && <th>Grup</th>}
-            <th>Data</th>
-            <th>Horari</th>
-            <th>Places</th>
-            <th>Actiu</th>
-            {showPending && <th>Pendents</th>}
-            <th>Confirmades</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibleSessions.map((session) => (
-            <Fragment key={session.id}>
-              <tr className={session.is_active ? "" : "row-inactive"}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(session.id)}
-                    onChange={() => toggleSelected(session.id)}
-                  />
-                </td>
-                <td>{session.title || <em>(sense títol)</em>}</td>
-                {isMultiroom && <td>{session.room_name}</td>}
-                <td>{session.date}</td>
-                <td>
-                  {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
-                </td>
-                <td>{session.capacity}</td>
-                <td>{session.is_active ? "Sí" : "No"}</td>
-                {showPending && <td>{session.pending_count ?? 0}</td>}
-                <td>{session.confirmed_count ?? 0}</td>
-                <td>
-                  <div className="table-actions">
-                    <Button icon={PencilIcon} onClick={() => handleEdit(session)}>
-                      Editar
-                    </Button>
-                    <Button icon={PowerIcon} onClick={() => handleToggleActive(session)}>
-                      {session.is_active ? "Desactivar" : "Activar"}
-                    </Button>
-                    <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(session.id)}>
-                      Esborrar
-                    </Button>
-                    <Button
-                      icon={ChevronDownIcon}
-                      expanded={expandedId === session.id}
-                      onClick={() => toggleReservations(session.id)}
-                    >
-                      {expandedId === session.id ? "Amagar reserves" : "Veure reserves"}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-              {expandedId === session.id && entity && (
-                <tr>
-                  <td colSpan={columnCount}>
-                    <SessionReservationsPanel
-                      sessionId={session.id}
-                      autoConfirm={entity.auto_confirm_reservations}
-                      onChanged={load}
+      {!isEditing && (
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={visibleSessions.length > 0 && selectedIds.size === visibleSessions.length}
+                  onChange={toggleSelectAll}
+                />
+              </th>
+              <th>{t("colTitle")}</th>
+              {isMultiroom && <th>{t("colRoom")}</th>}
+              <th>{t("colDate")}</th>
+              <th>{t("colSchedule")}</th>
+              <th>{t("colCapacity")}</th>
+              <th>{t("colActive")}</th>
+              {showPending && <th>{t("colPending")}</th>}
+              <th>{t("colConfirmed")}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleSessions.map((session) => (
+              <Fragment key={session.id}>
+                <tr
+                  className={[
+                    session.is_active ? "" : "row-inactive",
+                    isExpiredSession(session) ? "row-expired" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(session.id)}
+                      onChange={() => toggleSelected(session.id)}
                     />
                   </td>
+                  <td>{session.title || <em>{t("noTitle")}</em>}</td>
+                  {isMultiroom && <td>{session.room_name}</td>}
+                  <td>{session.date}</td>
+                  <td>
+                    {session.start_time?.slice(0, 5)}–{session.end_time?.slice(0, 5)}
+                  </td>
+                  <td>{session.capacity}</td>
+                  <td>{session.is_active ? t("yes") : t("no")}</td>
+                  {showPending && <td>{session.pending_count ?? 0}</td>}
+                  <td>{session.confirmed_count ?? 0}</td>
+                  <td>
+                    <div className="table-actions">
+                      <Button icon={PencilIcon} onClick={() => handleEdit(session)}>
+                        {t("editButton")}
+                      </Button>
+                      <Button icon={PowerIcon} onClick={() => handleToggleActive(session)}>
+                        {session.is_active ? t("deactivateButton") : t("activateButton")}
+                      </Button>
+                      <Button icon={TrashIcon} variant="danger" onClick={() => handleDelete(session.id)}>
+                        {t("deleteButton")}
+                      </Button>
+                      <Button
+                        icon={ChevronDownIcon}
+                        expanded={expandedId === session.id}
+                        onClick={() => toggleReservations(session.id)}
+                      >
+                        {expandedId === session.id ? t("hideReservationsButton") : t("showReservationsButton")}
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
-              )}
-            </Fragment>
-          ))}
-          {visibleSessions.length === 0 && (
-            <tr>
-              <td colSpan={columnCount}>No hi ha sessions configurades.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                {expandedId === session.id && entity && (
+                  <tr>
+                    <td colSpan={columnCount}>
+                      <SessionReservationsPanel
+                        sessionId={session.id}
+                        autoConfirm={entity.auto_confirm_reservations}
+                        onChanged={load}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+            {visibleSessions.length === 0 && (
+              <tr>
+                <td colSpan={columnCount}>{t("noSessionsConfigured")}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

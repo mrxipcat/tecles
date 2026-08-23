@@ -6,14 +6,24 @@ from sqlalchemy.orm import Session as DbSession
 
 from app.database import get_db
 from app.dependencies import get_current_admin, get_current_user
-from app.email_service import prepare_reservation_email, send_prepared_email
+from app.email_service import (
+    EmailError,
+    build_confirmed_reservations_email_body,
+    is_email_configured,
+    prepare_reservation_email,
+    send_email_now,
+    send_prepared_email,
+)
 from app.models import Reservation, ReservationStatus, SlotSession, User, UserRole
+from app.translations import t
 from app.schemas import (
     ReservationAdminRead,
     ReservationBulkSessionAction,
+    ReservationBulkUserAction,
     ReservationCreate,
     ReservationDecision,
     ReservationRead,
+    ReservationsEmailResult,
 )
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
@@ -92,6 +102,7 @@ def _check_reservation_limits(user: User, session: SlotSession, db: DbSession) -
 @router.get("", response_model=list[ReservationAdminRead])
 def list_reservations(
     session_id: int | None = None,
+    user_id: int | None = None,
     db: DbSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -103,10 +114,49 @@ def list_reservations(
         if current_user.role != UserRole.ADMIN or current_user.entity_id != session.entity_id:
             raise HTTPException(status_code=403, detail="Només un administrador pot veure totes les reserves d'una sessió")
         query = query.filter(Reservation.session_id == session_id)
+    elif user_id is not None and user_id != current_user.id:
+        target = db.get(User, user_id)
+        if not target:
+            raise HTTPException(status_code=404, detail="Usuari no trobat")
+        if current_user.role != UserRole.ADMIN or current_user.entity_id != target.entity_id:
+            raise HTTPException(status_code=403, detail="Només un administrador pot veure les reserves d'un altre usuari")
+        query = query.filter(Reservation.user_id == user_id)
     else:
         query = query.filter(Reservation.user_id == current_user.id)
 
     return query.order_by(Reservation.created_at.desc()).all()
+
+
+@router.post("/send-my-list-email", response_model=ReservationsEmailResult)
+def send_my_reservations_email(
+    db: DbSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.email:
+        raise HTTPException(status_code=400, detail="No tens cap correu electrònic configurat")
+
+    entity = current_user.entity
+    if not entity or not is_email_configured(entity):
+        return ReservationsEmailResult(
+            success=False,
+            detail="Aquesta entitat no té l'enviament de correus configurat",
+        )
+
+    reservations = (
+        db.query(Reservation)
+        .join(SlotSession, Reservation.session_id == SlotSession.id)
+        .filter(Reservation.user_id == current_user.id, Reservation.status.in_(ACTIVE_STATUSES))
+        .order_by(SlotSession.date, SlotSession.start_time)
+        .all()
+    )
+
+    subject = f"{entity.name}: {t(current_user.language, 'my_reservations_subject')}"
+    body = build_confirmed_reservations_email_body(current_user, reservations)
+    try:
+        send_email_now(entity, current_user.email, subject, body)
+    except EmailError as exc:
+        return ReservationsEmailResult(success=False, detail=str(exc))
+    return ReservationsEmailResult(success=True, detail=f"S'ha enviat el llistat a {current_user.email}.")
 
 
 @router.post("", response_model=ReservationRead, status_code=201)
@@ -191,6 +241,17 @@ def _validate_owned_sessions(session_ids: list[int], admin: User, db: DbSession)
             raise HTTPException(status_code=403, detail="No pots gestionar sessions d'una altra entitat")
 
 
+def _validate_owned_users(user_ids: list[int], admin: User, db: DbSession) -> None:
+    users = db.query(User).filter(User.id.in_(user_ids)).all()
+    found_ids = {user.id for user in users}
+    missing_ids = set(user_ids) - found_ids
+    if missing_ids:
+        raise HTTPException(status_code=404, detail=f"Usuari no trobat: {sorted(missing_ids)}")
+    for user in users:
+        if user.entity_id != admin.entity_id:
+            raise HTTPException(status_code=403, detail="No pots gestionar usuaris d'una altra entitat")
+
+
 @router.patch("/bulk-confirm", response_model=list[ReservationAdminRead])
 def bulk_confirm_reservations(
     payload: ReservationBulkSessionAction,
@@ -230,6 +291,32 @@ def bulk_cancel_reservations(
     reservations = (
         db.query(Reservation)
         .filter(Reservation.session_id.in_(payload.session_ids), Reservation.status.in_(ACTIVE_STATUSES))
+        .all()
+    )
+    for reservation in reservations:
+        reservation.status = ReservationStatus.CANCELLED_BY_ADMIN
+    prepared_emails = [prepare_reservation_email(reservation, "cancelled_by_admin") for reservation in reservations]
+    db.commit()
+    for reservation in reservations:
+        db.refresh(reservation)
+    for prepared in prepared_emails:
+        if prepared:
+            background_tasks.add_task(send_prepared_email, prepared)
+    return reservations
+
+
+@router.patch("/bulk-cancel-by-user", response_model=list[ReservationAdminRead])
+def bulk_cancel_reservations_by_user(
+    payload: ReservationBulkUserAction,
+    background_tasks: BackgroundTasks,
+    db: DbSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    _validate_owned_users(payload.user_ids, admin, db)
+
+    reservations = (
+        db.query(Reservation)
+        .filter(Reservation.user_id.in_(payload.user_ids), Reservation.status.in_(ACTIVE_STATUSES))
         .all()
     )
     for reservation in reservations:

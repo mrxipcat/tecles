@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import RichTextEditor from "../components/RichTextEditor.jsx";
@@ -16,6 +17,7 @@ const EMPTY_EMAIL_CONFIG = {
 };
 
 export default function AdminEntityConfigPage() {
+  const { t } = useTranslation("adminEntityConfig");
   const { user, setEntity: setAuthEntity } = useAuth();
   const [entity, setEntity] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -89,7 +91,7 @@ export default function AdminEntityConfigPage() {
     } catch (err) {
       setTestResult({
         success: false,
-        detail: err.response?.data?.detail || "No s'ha pogut enviar el correu de prova.",
+        detail: err.response?.data?.detail || t("testEmailFailedDefault"),
       });
     } finally {
       setTestSending(false);
@@ -97,15 +99,15 @@ export default function AdminEntityConfigPage() {
   }
 
   if (!entity) {
-    return <p>Carregant...</p>;
+    return <p>{t("loading")}</p>;
   }
 
   return (
     <div className="page">
-      <h1>Configuració de l'entitat</h1>
+      <h1>{t("pageTitle")}</h1>
       <form className="admin-form" onSubmit={handleSubmit}>
         <label>
-          Màxim de reserves per dia
+          {t("maxReservationsPerDay")}
           <input
             type="number"
             min="0"
@@ -114,7 +116,7 @@ export default function AdminEntityConfigPage() {
           />
         </label>
         <label>
-          Màxim de reserves per setmana
+          {t("maxReservationsPerWeek")}
           <input
             type="number"
             min="0"
@@ -123,7 +125,7 @@ export default function AdminEntityConfigPage() {
           />
         </label>
         <label>
-          Màxim de reserves per mes
+          {t("maxReservationsPerMonth")}
           <input
             type="number"
             min="0"
@@ -132,10 +134,10 @@ export default function AdminEntityConfigPage() {
           />
         </label>
         <label>
-          Visibilitat de l'oferta
+          {t("visibilityMode")}
           <select value={entity.visibility_mode} onChange={(e) => handleChange("visibility_mode", e.target.value)}>
-            <option value="always">Sempre visibles</option>
-            <option value="available_only">Només si hi ha places disponibles</option>
+            <option value="always">{t("visibilityAlways")}</option>
+            <option value="available_only">{t("visibilityAvailableOnly")}</option>
           </select>
         </label>
         <label className="checkbox-label">
@@ -144,7 +146,7 @@ export default function AdminEntityConfigPage() {
             checked={entity.show_available_places}
             onChange={(e) => handleChange("show_available_places", e.target.checked)}
           />
-          Mostrar les places lliures als usuaris
+          {t("showAvailablePlaces")}
         </label>
         <label className="checkbox-label">
           <input
@@ -152,7 +154,7 @@ export default function AdminEntityConfigPage() {
             checked={entity.auto_confirm_reservations}
             onChange={(e) => handleChange("auto_confirm_reservations", e.target.checked)}
           />
-          Confirmar les sol·licituds de reserva automàticament
+          {t("autoConfirmReservations")}
         </label>
         <label className="checkbox-label">
           <input
@@ -160,58 +162,58 @@ export default function AdminEntityConfigPage() {
             checked={entity.is_multiroom}
             onChange={(e) => handleChange("is_multiroom", e.target.checked)}
           />
-          Mode multigrup
+          {t("multiroomMode")}
         </label>
         {/* TODO(sprint3): els límits max_reservations_per_* encara no s'apliquen a la lògica de reserves. */}
         <Button type="submit" icon={SaveIcon} variant="primary">
-          Desar
+          {t("save")}
         </Button>
-        {saved && <span className="info">Desat correctament.</span>}
+        {saved && <span className="info">{t("savedSuccess")}</span>}
       </form>
 
-      <h2>Notificacions per correu</h2>
+      <h2>{t("emailNotificationsHeading")}</h2>
       <form className="admin-form" onSubmit={handleEmailConfigSubmit}>
         <label>
-          Servidor SMTP
+          {t("smtpHost")}
           <input
             value={emailConfig.smtp_host ?? ""}
             onChange={(e) => handleEmailConfigChange("smtp_host", e.target.value)}
-            placeholder="smtp.exemple.com"
+            placeholder={t("smtpHostPlaceholder")}
           />
         </label>
         <label>
-          Port
+          {t("smtpPort")}
           <input
             type="number"
             min="0"
             value={emailConfig.smtp_port ?? ""}
             onChange={(e) => handleEmailConfigChange("smtp_port", e.target.value)}
-            placeholder="587"
+            placeholder={t("smtpPortPlaceholder")}
           />
         </label>
         <label>
-          Usuari
+          {t("smtpUsername")}
           <input
             value={emailConfig.smtp_username ?? ""}
             onChange={(e) => handleEmailConfigChange("smtp_username", e.target.value)}
           />
         </label>
         <label>
-          Contrasenya
+          {t("smtpPassword")}
           <input
             type="password"
             value={smtpPasswordInput}
             onChange={(e) => setSmtpPasswordInput(e.target.value)}
-            placeholder={emailConfig.smtp_password_set ? "Configurada (deixa-ho en blanc per no canviar-la)" : ""}
+            placeholder={emailConfig.smtp_password_set ? t("smtpPasswordPlaceholderSet") : ""}
           />
         </label>
         <label>
-          Adreça del remitent
+          {t("smtpFromEmail")}
           <input
             type="email"
             value={emailConfig.smtp_from_email ?? ""}
             onChange={(e) => handleEmailConfigChange("smtp_from_email", e.target.value)}
-            placeholder="notificacions@exemple.com"
+            placeholder={t("smtpFromEmailPlaceholder")}
           />
         </label>
         <label className="checkbox-label">
@@ -220,35 +222,35 @@ export default function AdminEntityConfigPage() {
             checked={emailConfig.smtp_use_tls}
             onChange={(e) => handleEmailConfigChange("smtp_use_tls", e.target.checked)}
           />
-          Usar TLS
+          {t("useTls")}
         </label>
         <label>
-          Signatura / peu dels correus
+          {t("emailSignatureLabel")}
           <RichTextEditor
             value={emailConfig.email_signature}
             onChange={(html) => handleEmailConfigChange("email_signature", html)}
-            placeholder="S'afegirà al final de tots els correus enviats des del portal"
+            placeholder={t("emailSignaturePlaceholder")}
           />
         </label>
         <Button type="submit" icon={SaveIcon} variant="primary">
-          Desar
+          {t("save")}
         </Button>
-        {emailSaved && <span className="info">Desat correctament.</span>}
+        {emailSaved && <span className="info">{t("savedSuccess")}</span>}
       </form>
 
       <form className="admin-form" onSubmit={handleTestEmail}>
         <label>
-          Enviar un correu de prova a
+          {t("sendTestEmailLabel")}
           <input
             type="email"
             required
             value={testEmailAddress}
             onChange={(e) => setTestEmailAddress(e.target.value)}
-            placeholder="tu@exemple.com"
+            placeholder={t("sendTestEmailPlaceholder")}
           />
         </label>
         <Button type="submit" icon={MailIcon} disabled={testSending}>
-          {testSending ? "Enviant..." : "Enviar prova"}
+          {testSending ? t("sendingTest") : t("sendTest")}
         </Button>
         {testResult && (
           <span className={testResult.success ? "info" : "error"}>{testResult.detail}</span>

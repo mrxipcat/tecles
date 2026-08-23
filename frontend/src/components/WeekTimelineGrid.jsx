@@ -1,4 +1,5 @@
-import { isSameDay, toISODate, WEEKDAY_LABELS } from "../utils/calendarGrid.js";
+import { useTranslation } from "react-i18next";
+import { isBeforeDay, isSameDay, toISODate, getWeekdayLabels } from "../utils/calendarGrid.js";
 import { layoutDayEvents, toMinutes } from "../utils/timeLayout.js";
 import { availabilityClass } from "../utils/availability.js";
 
@@ -20,6 +21,8 @@ function computeHourRange(days, sessionsByDate) {
 }
 
 export default function WeekTimelineGrid({ days, sessionsByDate, selectedId, onSelectSession }) {
+  const { i18n } = useTranslation();
+  const weekdayLabels = getWeekdayLabels(i18n.language);
   const { startHour, endHour } = computeHourRange(days, sessionsByDate);
   const hourCount = endHour - startHour;
   const totalHeight = hourCount * HOUR_HEIGHT;
@@ -30,12 +33,17 @@ export default function WeekTimelineGrid({ days, sessionsByDate, selectedId, onS
     <div className="week-timeline">
       <div className="week-timeline-header">
         <div className="week-timeline-gutter" />
-        {days.map((day) => (
-          <div key={toISODate(day)} className={`week-timeline-daylabel ${isSameDay(day, today) ? "is-today" : ""}`}>
-            <span className="week-timeline-weekday">{WEEKDAY_LABELS[(day.getDay() + 6) % 7]}</span>
-            <span className="week-timeline-daynum">{day.getDate()}</span>
-          </div>
-        ))}
+        {days.map((day) => {
+          const dayLabelClasses = ["week-timeline-daylabel"];
+          if (isSameDay(day, today)) dayLabelClasses.push("is-today");
+          if (isBeforeDay(day, today)) dayLabelClasses.push("is-past");
+          return (
+            <div key={toISODate(day)} className={dayLabelClasses.join(" ")}>
+              <span className="week-timeline-weekday">{weekdayLabels[(day.getDay() + 6) % 7]}</span>
+              <span className="week-timeline-daynum">{day.getDate()}</span>
+            </div>
+          );
+        })}
       </div>
       <div className="week-timeline-body">
         <div className="week-timeline-hours" style={{ height: totalHeight }}>

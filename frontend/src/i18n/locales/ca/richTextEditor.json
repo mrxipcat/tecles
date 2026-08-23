@@ -1,0 +1,10 @@
+{
+  "bold": "Negreta",
+  "italic": "Cursiva",
+  "underline": "Subratllat",
+  "unorderedList": "Llista",
+  "orderedList": "Llista numerada",
+  "insertLink": "Insereix un enllaç",
+  "removeLink": "Treu l'enllaç",
+  "linkUrlPrompt": "URL de l'enllaç (https://...)"
+}
