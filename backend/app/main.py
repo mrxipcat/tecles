@@ -1,12 +1,13 @@
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, get_db
 from app.routers import auth, entities, reservations, rooms, sessions, superadmin, users
 from app.seed import run_seed
 
@@ -130,5 +131,10 @@ def on_startup() -> None:
 
 
 @app.get("/api/health")
-def health():
+def health(db: Session = Depends(get_db)):
+    """A més de servir com a comprovació de vida, aquest endpoint és cridat pel
+    frontend just en carregar la pàgina de login perquè "desperti" la base de
+    dades (Azure SQL Serverless la pausa per inactivitat i la primera consulta
+    després de la pausa pot trigar mig minut a respondre)."""
+    _retry_on_transient_db_error(lambda: db.execute(text("SELECT 1")))
     return {"status": "ok"}

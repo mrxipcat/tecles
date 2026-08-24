@@ -5,6 +5,7 @@
   "username": "Username",
   "password": "Password",
   "submit": "Log in",
+  "connectingToServer": "Connecting to the server…",
   "genericError": "Login error",
   "buildInfo": "Version {{version}} · Deployed on {{date}}"
 }

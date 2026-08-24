@@ -5,6 +5,7 @@
   "username": "Nom d'usuari",
   "password": "Contrasenya",
   "submit": "Entrar",
+  "connectingToServer": "Connectant amb el servidor…",
   "genericError": "Error d'inici de sessió",
   "buildInfo": "Versió {{version}} · Desplegat el {{date}}"
 }

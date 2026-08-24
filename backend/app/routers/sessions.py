@@ -151,7 +151,7 @@ def list_sessions(
     if entity_id is not None:
         query = query.filter(SlotSession.entity_id == entity_id)
     if not is_admin:
-        query = query.filter(SlotSession.is_active.is_(True))
+        query = query.filter(SlotSession.is_active == True)  # noqa: E712 (.is_(True) -> "IS 1", invalid in T-SQL)
     if (
         current_user is not None
         and current_user.role == UserRole.USER

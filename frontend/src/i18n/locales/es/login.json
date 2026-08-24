@@ -5,6 +5,7 @@
   "username": "Nombre de usuario",
   "password": "Contraseña",
   "submit": "Entrar",
+  "connectingToServer": "Conectando con el servidor…",
   "genericError": "Error al iniciar sesión",
   "buildInfo": "Versión {{version}} · Desplegado el {{date}}"
 }

@@ -30,6 +30,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [entityName, setEntityName] = useState(null);
+  const [connectingToServer, setConnectingToServer] = useState(true);
+
+  useEffect(() => {
+    client
+      .get("/health")
+      .catch(() => {})
+      .finally(() => setConnectingToServer(false));
+  }, []);
 
   useEffect(() => {
     if (!fixedEntityCode) return;
@@ -53,6 +61,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <h1>{fixedEntityCode && entityName ? t("titleWithEntity", { entityName }) : t("title")}</h1>
+      {connectingToServer && <p className="info">{t("connectingToServer")}</p>}
       <form onSubmit={handleSubmit}>
         {!fixedEntityCode && (
           <label>
