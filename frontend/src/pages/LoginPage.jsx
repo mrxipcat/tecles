@@ -78,7 +78,7 @@ export default function LoginPage() {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
         {error && <p className="error">{error}</p>}
-        <Button type="submit" icon={LogInIcon} variant="primary">
+        <Button type="submit" icon={LogInIcon} variant="primary" disabled={connectingToServer}>
           {t("submit")}
         </Button>
       </form>
