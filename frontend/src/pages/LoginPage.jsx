@@ -26,7 +26,7 @@ export default function LoginPage() {
     timeStyle: "short",
   });
   const [username, setUsername] = useState("usuari");
-  const [entityCode, setEntityCode] = useState(fixedEntityCode || "demo");
+  const [entityCode, setEntityCode] = useState(fixedEntityCode || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [entityName, setEntityName] = useState(null);
