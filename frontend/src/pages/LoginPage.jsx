@@ -61,7 +61,6 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <h1>{fixedEntityCode && entityName ? t("titleWithEntity", { entityName }) : t("title")}</h1>
-      {connectingToServer && <p className="info">{t("connectingToServer")}</p>}
       <form onSubmit={handleSubmit}>
         {!fixedEntityCode && (
           <label>
@@ -78,6 +77,7 @@ export default function LoginPage() {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
         {error && <p className="error">{error}</p>}
+        {connectingToServer && <p className="info">{t("connectingToServer")}</p>}
         <Button type="submit" icon={LogInIcon} variant="primary" disabled={connectingToServer}>
           {t("submit")}
         </Button>
