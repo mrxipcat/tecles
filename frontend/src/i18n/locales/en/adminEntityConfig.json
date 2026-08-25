@@ -10,6 +10,8 @@
   "showAvailablePlaces": "Show available places to users",
   "autoConfirmReservations": "Automatically confirm reservation requests",
   "multiroomMode": "Multi-room mode",
+  "allowSelfRegistration": "Allow self-registration of new users",
+  "selfRegistrationRoomsLabel": "Rooms new self-registered users get access to",
   "save": "Save",
   "savedSuccess": "Saved successfully.",
   "emailNotificationsHeading": "Email notifications",

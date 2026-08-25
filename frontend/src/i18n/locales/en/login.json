@@ -7,5 +7,11 @@
   "submit": "Log in",
   "connectingToServer": "Connecting to the server…",
   "genericError": "Login error",
+  "selfRegisterButton": "Register as a new user",
+  "selfRegisterEmailLabel": "Email address to register as a new user:",
+  "selfRegisterSubmit": "Submit",
+  "selfRegisterCancel": "Cancel",
+  "selfRegisterBackToLogin": "Back to login",
+  "selfRegisterGenericError": "Registration could not be completed",
   "buildInfo": "Version {{version}} · Deployed on {{date}}"
 }

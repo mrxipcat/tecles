@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.database import get_db
 from app.dependencies import get_current_admin
 from app.email_service import EmailError, send_email_now
-from app.models import Entity, User
+from app.models import Entity, Room, User
 from app.sanitize import sanitize_rich_text
 from app.translations import t
 from app.schemas import (
@@ -59,7 +59,14 @@ def update_entity(
 ):
     entity = _get_owned_entity(entity_id, admin, db)
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    fields = payload.model_dump(exclude_unset=True)
+    room_ids = fields.pop("self_registration_room_ids", None)
+    if room_ids is not None:
+        rooms = db.query(Room).filter(Room.id.in_(room_ids), Room.entity_id == entity.id).all()
+        if len(rooms) != len(set(room_ids)):
+            raise HTTPException(status_code=400, detail="Grup no vàlid")
+        entity.self_registration_rooms = rooms
+    for field, value in fields.items():
         setattr(entity, field, value)
 
     db.commit()

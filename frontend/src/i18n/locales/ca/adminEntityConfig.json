@@ -10,6 +10,8 @@
   "showAvailablePlaces": "Mostrar les places lliures als usuaris",
   "autoConfirmReservations": "Confirmar les sol·licituds de reserva automàticament",
   "multiroomMode": "Mode multigrup",
+  "allowSelfRegistration": "Permetre auto-registre de nous usuaris",
+  "selfRegistrationRoomsLabel": "Grups amb accés pels nous usuaris autoregistrats",
   "save": "Desar",
   "savedSuccess": "Desat correctament.",
   "emailNotificationsHeading": "Notificacions per correu",

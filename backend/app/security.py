@@ -14,17 +14,26 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
+import string
 
 from app.models import User
 
 TOKEN_PREFIX = "dev."
 _PBKDF2_ITERATIONS = 200_000
+_TEMP_PASSWORD_ALPHABET = string.ascii_letters + string.digits
 
 
 def hash_password(password: str) -> str:
     salt = os.urandom(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS)
     return f"{salt.hex()}${digest.hex()}"
+
+
+def generate_temporary_password(length: int = 10) -> str:
+    """Contrasenya inicial d'un sol ús per a l'autoregistre (`routers/auth.py::register`);
+    l'usuari l'ha de canviar en el primer login (`must_change_password`)."""
+    return "".join(secrets.choice(_TEMP_PASSWORD_ALPHABET) for _ in range(length))
 
 
 def verify_password(password: str, stored: str) -> bool:

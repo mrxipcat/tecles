@@ -76,6 +76,7 @@ def _add_missing_columns() -> None:
         ("entities", "slot_label_singular_en", "VARCHAR(50) NULL"),
         ("entities", "slot_label_plural_es", "VARCHAR(50) NULL"),
         ("entities", "slot_label_plural_en", "VARCHAR(50) NULL"),
+        ("entities", "allow_self_registration", f"{bool_type} NOT NULL DEFAULT 0"),
     ]
     with engine.begin() as conn:
         for table, column, ddl in specs:

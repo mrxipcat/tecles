@@ -27,11 +27,22 @@ export default function AdminEntityConfigPage() {
   const [testEmailAddress, setTestEmailAddress] = useState(user.email || "");
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
     client.get(`/entities/${user.entity_id}`).then(({ data }) => setEntity(data));
     client.get(`/entities/${user.entity_id}/email-config`).then(({ data }) => setEmailConfig(data));
+    client.get("/rooms", { params: { entity_id: user.entity_id } }).then(({ data }) => setRooms(data));
   }, [user.entity_id]);
+
+  function toggleSelfRegistrationRoom(roomId) {
+    setEntity((prev) => {
+      const current = prev.self_registration_room_ids;
+      const next = current.includes(roomId) ? current.filter((id) => id !== roomId) : [...current, roomId];
+      return { ...prev, self_registration_room_ids: next };
+    });
+    setSaved(false);
+  }
 
   function handleChange(field, value) {
     setEntity((prev) => ({ ...prev, [field]: value }));
@@ -53,6 +64,8 @@ export default function AdminEntityConfigPage() {
       show_available_places: entity.show_available_places,
       auto_confirm_reservations: entity.auto_confirm_reservations,
       is_multiroom: entity.is_multiroom,
+      allow_self_registration: entity.allow_self_registration,
+      self_registration_room_ids: entity.self_registration_room_ids,
     };
     const { data } = await client.patch(`/entities/${entity.id}`, payload);
     setEntity(data);
@@ -164,6 +177,31 @@ export default function AdminEntityConfigPage() {
           />
           {t("multiroomMode")}
         </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={entity.allow_self_registration}
+            onChange={(e) => handleChange("allow_self_registration", e.target.checked)}
+          />
+          {t("allowSelfRegistration")}
+        </label>
+        {entity.is_multiroom && entity.allow_self_registration && (
+          <label>
+            {t("selfRegistrationRoomsLabel")}
+            <div className="room-checkbox-list">
+              {rooms.map((room) => (
+                <label key={room.id}>
+                  <input
+                    type="checkbox"
+                    checked={entity.self_registration_room_ids.includes(room.id)}
+                    onChange={() => toggleSelfRegistrationRoom(room.id)}
+                  />
+                  {room.name}
+                </label>
+              ))}
+            </div>
+          </label>
+        )}
         {/* TODO(sprint3): els límits max_reservations_per_* encara no s'apliquen a la lògica de reserves. */}
         <Button type="submit" icon={SaveIcon} variant="primary">
           {t("save")}

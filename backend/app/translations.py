@@ -25,6 +25,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "test_email_subject": "Correu de prova",
         "test_email_body_1": "Aquest és un correu de prova de la configuració SMTP del portal.",
         "test_email_body_2": "Si l'has rebut, l'enviament de notificacions per correu funciona correctament.",
+        "self_register_subject": "Sol·licitud d'alta d'usuari",
+        "self_register_intro": "S'ha registrat una sol·licitud d'alta al portal amb les credencials següents:",
+        "self_register_username_label": "Usuari:",
+        "self_register_password_label": "Contrasenya inicial:",
+        "self_register_login_link_label": "Accedir al portal",
     },
     "es": {
         "action_requested": "Solicitud de reserva registrada",
@@ -46,6 +51,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "test_email_subject": "Correo de prueba",
         "test_email_body_1": "Este es un correo de prueba de la configuración SMTP del portal.",
         "test_email_body_2": "Si lo has recibido, el envío de notificaciones por correo funciona correctamente.",
+        "self_register_subject": "Solicitud de alta de usuario",
+        "self_register_intro": "Se ha registrado una solicitud de alta en el portal con las siguientes credenciales:",
+        "self_register_username_label": "Usuario:",
+        "self_register_password_label": "Contraseña inicial:",
+        "self_register_login_link_label": "Acceder al portal",
     },
     "en": {
         "action_requested": "Reservation request registered",
@@ -67,6 +77,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "test_email_subject": "Test email",
         "test_email_body_1": "This is a test email for the portal's SMTP configuration.",
         "test_email_body_2": "If you received it, email notifications are working correctly.",
+        "self_register_subject": "New user registration request",
+        "self_register_intro": "A registration request was submitted to the portal with the following credentials:",
+        "self_register_username_label": "Username:",
+        "self_register_password_label": "Initial password:",
+        "self_register_login_link_label": "Go to the portal",
     },
 }
 

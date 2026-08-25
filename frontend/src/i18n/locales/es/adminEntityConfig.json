@@ -10,6 +10,8 @@
   "showAvailablePlaces": "Mostrar las plazas libres a los usuarios",
   "autoConfirmReservations": "Confirmar las solicitudes de reserva automáticamente",
   "multiroomMode": "Modo multigrupo",
+  "allowSelfRegistration": "Permitir autorregistro de nuevos usuarios",
+  "selfRegistrationRoomsLabel": "Grupos con acceso para los nuevos usuarios autorregistrados",
   "save": "Guardar",
   "savedSuccess": "Guardado correctamente.",
   "emailNotificationsHeading": "Notificaciones por correo",

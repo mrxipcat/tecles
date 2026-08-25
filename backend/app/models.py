@@ -84,6 +84,10 @@ class Entity(Base):
     show_available_places: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     auto_confirm_reservations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_multiroom: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Habilita `POST /auth/register` (`routers/auth.py`) perquè nous usuaris puguin
+    # crear-se el seu propi compte des de la pàgina de login, amb rol USER forçat i
+    # una contrasenya inicial d'un sol ús enviada per correu.
+    allow_self_registration: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Compte i servidor SMTP utilitzats per `app/email_service.py` per enviar les
     # notificacions de reserves i el correu de prova de configuració.
@@ -101,6 +105,10 @@ class Entity(Base):
     users: Mapped[list["User"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
     sessions: Mapped[list["SlotSession"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
     rooms: Mapped[list["Room"]] = relationship(back_populates="entity", cascade="all, delete-orphan")
+    # Grups assignats automàticament als usuaris que s'autoregistren (vegeu
+    # `entity_self_registration_rooms` més avall); buit = sense restricció, igual que
+    # `User.visible_rooms`. Només té efecte real quan `is_multiroom` és cert.
+    self_registration_rooms: Mapped[list["Room"]] = relationship(secondary="entity_self_registration_rooms")
 
     @property
     def slot_label_singular(self) -> dict[str, str | None]:
@@ -109,6 +117,10 @@ class Entity(Base):
     @property
     def slot_label_plural(self) -> dict[str, str | None]:
         return {"ca": self.slot_label_plural_ca, "es": self.slot_label_plural_es, "en": self.slot_label_plural_en}
+
+    @property
+    def self_registration_room_ids(self) -> list[int]:
+        return [room.id for room in self.self_registration_rooms]
 
     def slot_label(self, lang: str | None, *, plural: bool = False) -> str:
         """Resol l'alies del slot per a `lang`, amb reserva al valor català si no
@@ -134,6 +146,14 @@ user_rooms = Table(
     "user_rooms",
     Base.metadata,
     Column("user_id", ForeignKey("users.id"), primary_key=True),
+    Column("room_id", ForeignKey("rooms.id"), primary_key=True),
+)
+
+
+entity_self_registration_rooms = Table(
+    "entity_self_registration_rooms",
+    Base.metadata,
+    Column("entity_id", ForeignKey("entities.id"), primary_key=True),
     Column("room_id", ForeignKey("rooms.id"), primary_key=True),
 )
 

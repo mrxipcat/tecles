@@ -30,6 +30,7 @@ class EntityBase(BaseModel):
     show_available_places: bool = True
     auto_confirm_reservations: bool = True
     is_multiroom: bool = False
+    allow_self_registration: bool = False
 
 
 class EntityCreate(EntityBase):
@@ -48,6 +49,7 @@ class EntityUpdate(BaseModel):
     show_available_places: bool | None = None
     auto_confirm_reservations: bool | None = None
     is_multiroom: bool | None = None
+    allow_self_registration: bool | None = None
 
 
 class EntitySelfUpdate(BaseModel):
@@ -59,6 +61,9 @@ class EntitySelfUpdate(BaseModel):
     show_available_places: bool | None = None
     auto_confirm_reservations: bool | None = None
     is_multiroom: bool | None = None
+    allow_self_registration: bool | None = None
+    # Grups assignats als nous usuaris autoregistrats (només rellevant si is_multiroom).
+    self_registration_room_ids: list[int] | None = None
 
 
 class EntityRead(EntityBase):
@@ -66,6 +71,7 @@ class EntityRead(EntityBase):
 
     id: int
     created_at: datetime
+    self_registration_room_ids: list[int] = []
 
 
 class EntityPublicRead(BaseModel):
@@ -73,6 +79,7 @@ class EntityPublicRead(BaseModel):
 
     name: str
     code: str
+    allow_self_registration: bool = False
 
 
 # Camps SMTP fora d'`EntityBase`/`EntityRead` a propòsit: aquests es serialitzen
@@ -202,6 +209,19 @@ class LoginResponse(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class SelfRegisterRequest(BaseModel):
+    entity_code: str
+    email: str
+    # Origen (`window.location.origin`) de la pàgina de login des d'on s'envia la
+    # sol·licitud, per construir l'enllaç del correu amb el mateix domini/subdomini
+    # que l'usuari ja estava fent servir (`routers/auth.py::_resolve_login_origin`).
+    origin: str | None = None
+
+
+class SelfRegisterResponse(BaseModel):
+    detail: str
 
 
 # ---------- Room ----------

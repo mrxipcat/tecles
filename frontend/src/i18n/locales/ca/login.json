@@ -7,5 +7,11 @@
   "submit": "Entrar",
   "connectingToServer": "Connectant amb el servidor…",
   "genericError": "Error d'inici de sessió",
+  "selfRegisterButton": "Registrar-se com a nou usuari",
+  "selfRegisterEmailLabel": "Correu electrònic a registrar com a nou usuari:",
+  "selfRegisterSubmit": "Enviar",
+  "selfRegisterCancel": "Cancel·lar",
+  "selfRegisterBackToLogin": "Tornar a l'inici de sessió",
+  "selfRegisterGenericError": "No s'ha pogut completar el registre",
   "buildInfo": "Versió {{version}} · Desplegat el {{date}}"
 }
