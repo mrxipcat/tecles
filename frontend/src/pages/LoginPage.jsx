@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import client from "../api/client.js";
 import Button from "../components/Button.jsx";
 import { LogInIcon } from "../components/icons.jsx";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth, LOGOUT_ENTITY_CODE_KEY } from "../context/AuthContext.jsx";
 
 const BUILD_LOCALES = { ca: "ca-ES", es: "es-ES", en: "en-GB" };
 
@@ -25,12 +25,17 @@ export default function LoginPage() {
     dateStyle: "medium",
     timeStyle: "short",
   });
+  const usernameInputRef = useRef(null);
   const [username, setUsername] = useState("usuari");
-  const [entityCode, setEntityCode] = useState(fixedEntityCode || "");
+  const [entityCode, setEntityCode] = useState(() => {
+    if (fixedEntityCode) return fixedEntityCode;
+    return sessionStorage.getItem(LOGOUT_ENTITY_CODE_KEY) || "";
+  });
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [entityName, setEntityName] = useState(null);
   const [connectingToServer, setConnectingToServer] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     client
@@ -38,6 +43,19 @@ export default function LoginPage() {
       .catch(() => {})
       .finally(() => setConnectingToServer(false));
   }, []);
+
+  useEffect(() => {
+    if (fixedEntityCode || !sessionStorage.getItem(LOGOUT_ENTITY_CODE_KEY)) return;
+    sessionStorage.removeItem(LOGOUT_ENTITY_CODE_KEY);
+    usernameInputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!submitting) return;
+    document.body.classList.add("app-busy");
+    return () => document.body.classList.remove("app-busy");
+  }, [submitting]);
 
   useEffect(() => {
     if (!fixedEntityCode) return;
@@ -50,11 +68,14 @@ export default function LoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
+    setSubmitting(true);
     try {
       await login({ username, entityCode: entityCode.trim() || null, password });
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.detail || t("genericError"));
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -70,7 +91,7 @@ export default function LoginPage() {
         )}
         <label>
           {t("username")}
-          <input value={username} onChange={(e) => setUsername(e.target.value)} required />
+          <input ref={usernameInputRef} value={username} onChange={(e) => setUsername(e.target.value)} required />
         </label>
         <label>
           {t("password")}
@@ -78,7 +99,7 @@ export default function LoginPage() {
         </label>
         {error && <p className="error">{error}</p>}
         {connectingToServer && <p className="info">{t("connectingToServer")}</p>}
-        <Button type="submit" icon={LogInIcon} variant="primary" disabled={connectingToServer}>
+        <Button type="submit" icon={LogInIcon} variant="primary" disabled={connectingToServer || submitting}>
           {t("submit")}
         </Button>
       </form>

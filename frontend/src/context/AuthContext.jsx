@@ -3,6 +3,7 @@ import client from "../api/client.js";
 import i18n, { SUPPORTED_LANGUAGES } from "../i18n/index.js";
 
 const STORAGE_KEY = "webaules_auth";
+export const LOGOUT_ENTITY_CODE_KEY = "webaules_logout_entity_code";
 const AuthContext = createContext(null);
 
 function loadStored() {
@@ -74,6 +75,11 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    if (entity?.code) {
+      sessionStorage.setItem(LOGOUT_ENTITY_CODE_KEY, entity.code);
+    } else {
+      sessionStorage.removeItem(LOGOUT_ENTITY_CODE_KEY);
+    }
     localStorage.removeItem(STORAGE_KEY);
     setAuth(null);
   }
