@@ -85,14 +85,21 @@ export default function LoginPage() {
     if (fixedEntityCode || connectingToServer) return;
     const code = entityCode.trim();
     if (!code) {
+      setEntityName(null);
       setEntityAllowsRegistration(false);
       return;
     }
     const handle = setTimeout(() => {
       client
         .get(`/entities/by-code/${code}`)
-        .then((res) => setEntityAllowsRegistration(res.data.allow_self_registration))
-        .catch(() => setEntityAllowsRegistration(false));
+        .then((res) => {
+          setEntityName(res.data.name);
+          setEntityAllowsRegistration(res.data.allow_self_registration);
+        })
+        .catch(() => {
+          setEntityName(null);
+          setEntityAllowsRegistration(false);
+        });
     }, 400);
     return () => clearTimeout(handle);
   }, [entityCode, fixedEntityCode, connectingToServer]);
@@ -138,7 +145,7 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <h1>{fixedEntityCode && entityName ? t("titleWithEntity", { entityName }) : t("title")}</h1>
+      <h1>{entityName ? t("titleWithEntity", { entityName }) : t("title")}</h1>
       {mode === "login" ? (
         <form onSubmit={handleSubmit}>
           {!fixedEntityCode && (
