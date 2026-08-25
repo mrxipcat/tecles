@@ -39,7 +39,11 @@ def get_entity_by_code(code: str, db: DbSession = Depends(get_db)):
     entity = db.query(Entity).filter(Entity.code == code).first()
     if not entity:
         raise HTTPException(status_code=404, detail="Entitat no trobada")
-    return entity
+    return EntityPublicRead(
+        name=entity.name if entity.allow_self_registration else None,
+        code=entity.code,
+        allow_self_registration=entity.allow_self_registration,
+    )
 
 
 @router.get("/{entity_id}", response_model=EntityRead)

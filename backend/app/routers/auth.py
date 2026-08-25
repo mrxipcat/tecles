@@ -1,7 +1,7 @@
 import html
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from sqlalchemy.orm import Session as DbSession
 
 from app.config import settings
@@ -26,24 +26,31 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 SUPPORTED_LANGUAGES = {"ca", "es", "en"}
 
 
-def _resolve_login_origin(origin: str | None) -> str:
-    """Fa servir `origin` (l'origen real de la pàgina de login, `window.location.origin`)
-    per a l'enllaç del correu d'autoregistre quan el seu domini coincideix amb
-    `FRONTEND_ORIGIN` o n'és un subdomini (p. ex. `https://canrahull.tecles.com` quan
-    `FRONTEND_ORIGIN` és `https://tecles.com`) — així l'enllaç manté el subdomini de
-    l'entitat en lloc de l'origen genèric configurat al backend. Si no coincideix (o no
-    se n'ha rebut cap), es fa servir `FRONTEND_ORIGIN` com a reserva, per evitar que una
-    petició pugui fer que el correu inclogui un enllaç cap a un domini arbitrari."""
-    configured = urlparse(settings.frontend_origin)
-    if not origin or not configured.hostname:
-        return settings.frontend_origin
-    parsed = urlparse(origin)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        return settings.frontend_origin
-    host = parsed.hostname.lower()
-    base_host = configured.hostname.lower()
-    if host == base_host or host.endswith(f".{base_host}"):
+def _well_formed_origin(value: str | None) -> str | None:
+    if not value:
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme in ("http", "https") and parsed.hostname:
         return f"{parsed.scheme}://{parsed.netloc}"
+    return None
+
+
+def _resolve_login_origin(*, header_origin: str | None, referer: str | None, payload_origin: str | None) -> str:
+    """Origen (protocol+domini) fet servir a l'enllaç de login del correu d'autoregistre,
+    en ordre de preferència: la capçalera `Origin`, la capçalera `Referer`, l'origen que
+    envia el frontend al cos de la petició (`window.location.origin`), i `FRONTEND_ORIGIN`
+    com a última reserva. Les capçaleres es prioritzen perquè les estableix el navegador
+    (no es poden falsejar des de JavaScript en una petició real); el camp del cos només
+    fa de reserva per si algun proxy intermedi les elimina (les Managed Functions d'Azure
+    Static Web Apps ja sobreescriuen `Authorization` abans de reenviar la petició, vegeu
+    `app/dependencies.py::get_current_user`, així que no es pot donar per fet que totes
+    les capçaleres arribin intactes). No es valida contra `FRONTEND_ORIGIN`: aquest valor
+    és exactament el que pot estar mal configurat en desplegaments amb subdomini per
+    entitat, que és el problema que aquesta funció soluciona."""
+    for candidate in (header_origin, referer, payload_origin):
+        resolved = _well_formed_origin(candidate)
+        if resolved:
+            return resolved
     return settings.frontend_origin
 
 
@@ -85,7 +92,13 @@ def login(payload: LoginRequest, db: DbSession = Depends(get_db)):
 
 
 @router.post("/register", response_model=SelfRegisterResponse, status_code=201)
-def register(payload: SelfRegisterRequest, background_tasks: BackgroundTasks, db: DbSession = Depends(get_db)):
+def register(
+    payload: SelfRegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: DbSession = Depends(get_db),
+    origin_header: str | None = Header(default=None, alias="Origin"),
+    referer_header: str | None = Header(default=None, alias="Referer"),
+):
     """Autoregistre d'un nou usuari (rol USER forçat, sense contrasenya pròpia): cal que
     l'entitat ho tingui activat (`Entity.allow_self_registration`) i tingui l'enviament de
     correus configurat, ja que la contrasenya inicial d'un sol ús només s'entrega per correu.
@@ -125,7 +138,10 @@ def register(payload: SelfRegisterRequest, background_tasks: BackgroundTasks, db
     db.refresh(user)
 
     lang = user.language
-    login_url = f"{_resolve_login_origin(payload.origin)}/login?entitat={entity.code}"
+    login_origin = _resolve_login_origin(
+        header_origin=origin_header, referer=referer_header, payload_origin=payload.origin
+    )
+    login_url = f"{login_origin}/login?entitat={entity.code}"
     body = (
         f"<p>{t(lang, 'self_register_intro')}</p>"
         "<ul>"

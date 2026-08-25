@@ -77,7 +77,11 @@ class EntityRead(EntityBase):
 class EntityPublicRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name: str
+    # None quan `allow_self_registration` és fals: sense autoregistre no cal mostrar
+    # el nom a ningú que encara no hagi iniciat sessió (vegeu
+    # `routers/entities.py::get_entity_by_code`) — evita que es pugui identificar
+    # quines entitats hi ha al sistema només coneixent/provant codis.
+    name: str | None
     code: str
     allow_self_registration: bool = False
 
